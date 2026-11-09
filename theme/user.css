@@ -441,6 +441,12 @@ input:focus-visible {
   box-shadow: none !important;
 }
 
+/* The sort row (search + sort pill) is the first thing inside the list's scroll container, which
+   clips 2px above the pill and cuts off its top highlight. Give it room for a raised-1 shadow. */
+#Desktop_LeftSidebar_Id div:has(> [aria-controls="sort-and-view-picker"]) {
+  padding-top: var(--sn-space-3) !important;
+}
+
 /* Chip carousel scroll arrows sit in an absolute overlay; centre them on the (padded) chip row. */
 #Desktop_LeftSidebar_Id div[role="presentation"]:has([role="listbox"]) + div {
   align-items: center;
@@ -787,6 +793,12 @@ section[data-testid="component-shelf"] > div::after {
   inline-size: 100% !important;
   block-size: 100% !important;
   object-fit: cover;
+}
+
+/* Icon button pairs (header: more + expand; track: share + add): Spotify sets no gap on the
+   header pair, so the raised circles touch. Use the same 12px gap for both. */
+#Desktop_PanelContainer_Id div:has(> [data-encore-id="buttonTertiary"] + [data-encore-id="buttonTertiary"]) {
+  gap: var(--sn-space-3);
 }
 
 /* Info sections (lyrics preview, about the artist, credits, queue preview): raised cards. */
