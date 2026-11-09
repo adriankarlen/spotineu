@@ -217,6 +217,18 @@ agent-browser --session spotineu diff screenshot --baseline .screenshots/baselin
 
 Keep the Spotify window the same size between baseline and comparison.
 
+## Demo screenshots (README)
+
+`scripts/demo-mode.js` anonymises the live page: generic library names,
+gradient covers for user-made playlists, "listener" for the account, no
+household shelves (audiobooks, kids, recents, own playlists), and the
+owner's all-lowercase Marketplace snippet neutralised. Run it after each
+navigation (it also watches for re-renders), use public editorial pages
+(for example `/playlist/37i9dQZF1DXcBWIGoYBM5M`), and check every image
+for personal data before committing. Output goes to `docs/screenshots/`
+as 1× WebP:
+`magick .screenshots/x.png -resize 2046x -quality 88 docs/screenshots/x.webp`.
+
 ## Reporting
 
 Say what you verified and how: which check ran, which views and schemes you
