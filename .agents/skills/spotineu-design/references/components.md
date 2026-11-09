@@ -79,9 +79,11 @@ choice.
 - Entity header (playlist, album, artist): the cover art sits in a raised-2
   frame (padding 10px, radius `--sn-r-card`, image radius 10px). Title and
   metadata flat to its right.
-- Artist hero banners: keep the image, inside a rounded frame with radius
-  `--sn-r-card`, inset from the slab edge by the slab padding. No overlay
-  gradient beyond what keeps the title readable.
+- Hero images (editorial playlists, artists): the photo stays, at the top of
+  the slab (clipped by its radius). Spotify's dark scrim is replaced by a
+  matte fade into the surface at the bottom, so the title in the scheme's
+  `text` colour reads on any photo in light and dark schemes. Never make
+  the layers above the photo opaque.
 - Action bar (`data-testid="action-bar"`): the big play button is raised-2,
   56px, accent fill, `on-accent` icon. Shuffle, like/save, download and more
   are raised-1 circles, 40px, following the toggle rules.

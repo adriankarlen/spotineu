@@ -519,17 +519,16 @@ section[data-testid="component-shelf"] > div::after {
 #main-view [data-testid$="-page"] > div > div:empty[style*="--background-base"] {
   background: none !important;
 }
-/* Sticky bars that fade in on scroll (home chip row, page headers) paint an empty layer with an
-   inline --background-base (a grey/artwork colour). Sticky bars must stay opaque, so the layer
-   becomes the surface rather than transparent. */
+/* Sticky bars that fade in on scroll (home chip row, page headers) paint an empty layer with a
+   grey/artwork colour. Sticky bars must stay opaque, so their layer becomes the surface. */
 /* The home chip row's layer is the empty div just before the chips; Spotify only sometimes sets the
-   inline variable, and adds a 60% black scrim in ::after. */
-#main-view div:empty[style*="--background-base"],
+   inline variable, and adds a 60% black scrim in ::after. Only sticky layers become opaque: other
+   empty --background-base layers sit over hero images (editorial playlists, artists) and must stay
+   transparent. */
 #main-view div:has(> div:empty + div [data-encore-id="chip"]) > div:empty {
   background-color: var(--spice-main) !important;
   background-image: none !important;
 }
-#main-view div:empty[style*="--background-base"]::after,
 #main-view div:has(> div:empty + div [data-encore-id="chip"]) > div:empty::after {
   background: none !important;
 }
@@ -541,6 +540,14 @@ section[data-testid="component-shelf"] > div::after {
 #main-view [data-testid="topbar"] > div:empty:not([style*="--background-base"]),
 #main-view [data-testid="topbar"] > div[style*="--background-base"] > div:empty {
   background: none !important; /* includes a 60% black scrim nested in the bar */
+}
+
+/* Hero images (editorial playlists, artists): Spotify's scrim is the empty layer right after the
+   image. Replace it with a matte fade into the surface, so the title in the scheme's text colour
+   stays readable on any photo, in light and dark schemes alike. */
+#main-view [data-testid="background-image"] + div:empty {
+  background-color: transparent !important;
+  background-image: linear-gradient(to bottom, transparent 30%, rgba(var(--spice-rgb-main), 0.92) 100%) !important;
 }
 
 /* The header sets light text colours for its dark wash; the wash is gone, so use the roles. */
