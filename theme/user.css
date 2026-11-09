@@ -1,0 +1,880 @@
+/* spotineu: a neumorphic Spotify theme.
+   Design language: .agents/skills/spotineu-design (read it before editing). */
+
+/* ==== Tokens ==== */
+:root {
+  /* Depth: one knob scales every shadow. Change only here, on :root. */
+  --sn-depth: 1;
+
+  --sn-hi: rgb(var(--spice-rgb-neu-light));
+  --sn-lo: rgb(var(--spice-rgb-neu-dark));
+
+  --sn-o1: calc(3px * var(--sn-depth));
+  --sn-b1: calc(7px * var(--sn-depth));
+  --sn-o2: calc(6px * var(--sn-depth));
+  --sn-b2: calc(14px * var(--sn-depth));
+  --sn-o3: calc(10px * var(--sn-depth));
+  --sn-b3: calc(24px * var(--sn-depth));
+
+  /* The thin bright rim on raised edges: the crisp look of the reference. */
+  --sn-rim: inset 1px 1px 0 rgba(var(--spice-rgb-neu-light), 0.9);
+
+  --sn-raised-1:
+    calc(var(--sn-o1) * -1) calc(var(--sn-o1) * -1) var(--sn-b1) var(--sn-hi),
+    var(--sn-o1) var(--sn-o1) var(--sn-b1) var(--sn-lo),
+    var(--sn-rim);
+  --sn-raised-2:
+    calc(var(--sn-o2) * -1) calc(var(--sn-o2) * -1) var(--sn-b2) var(--sn-hi),
+    var(--sn-o2) var(--sn-o2) var(--sn-b2) var(--sn-lo),
+    var(--sn-rim);
+  --sn-raised-3:
+    calc(var(--sn-o3) * -1) calc(var(--sn-o3) * -1) var(--sn-b3) var(--sn-hi),
+    var(--sn-o3) var(--sn-o3) var(--sn-b3) var(--sn-lo),
+    var(--sn-rim);
+
+  --sn-inset-1:
+    inset var(--sn-o1) var(--sn-o1) var(--sn-b1) var(--sn-lo),
+    inset calc(var(--sn-o1) * -1) calc(var(--sn-o1) * -1) var(--sn-b1) var(--sn-hi);
+  --sn-inset-2:
+    inset var(--sn-o2) var(--sn-o2) var(--sn-b2) var(--sn-lo),
+    inset calc(var(--sn-o2) * -1) calc(var(--sn-o2) * -1) var(--sn-b2) var(--sn-hi);
+
+  --sn-outline: 1px solid rgba(var(--spice-rgb-neu-dark), 0.45);
+  --sn-divider: 1px solid rgba(var(--spice-rgb-neu-dark), 0.45);
+
+  /* Shape */
+  --sn-r-slab: 28px;
+  --sn-r-card: 20px;
+  --sn-r-control: 14px;
+  --sn-r-pill: 999px;
+  /* Images inside frames: inner radius = outer radius - padding. */
+  --sn-r-art: calc(var(--sn-r-card) - var(--sn-space-3));
+  --sn-r-thumb: 6px;
+
+  /* Space */
+  --sn-space-1: 4px;
+  --sn-space-2: 8px;
+  --sn-space-3: 12px;
+  --sn-space-4: 16px;
+  --sn-space-5: 20px;
+  --sn-space-6: 24px;
+  --sn-space-8: 32px;
+  --sn-gap-slab: var(--sn-space-5);
+
+  /* States */
+  --sn-hover-tint: rgba(var(--spice-rgb-text), 0.05);
+  --sn-disabled-opacity: 0.45;
+  --sn-focus: 2px solid var(--spice-button-active);
+  --sn-ease: 140ms ease-out;
+
+  /* Type */
+  --sn-font: "Figtree";
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("fonts/spotineu/Figtree-latin.woff2") format("woff2");
+  font-weight: 300 900;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("fonts/spotineu/Figtree-latin-ext.woff2") format("woff2");
+  font-weight: 300 900;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Spotify declares its stacks with !important; keep its fonts as fallback
+   for scripts Figtree does not cover. */
+.encore-dark-theme,
+.encore-light-theme,
+.encore-layout-themes {
+  --encore-body-font-stack: var(--sn-font), SpotifyMixUI, SpotifyMixUI-Arab, SpotifyMixUI-Cyrl, SpotifyMixUI-Grek, SpotifyMixUI-Hebr, SpotifyMixUI-Thai, DevanagariFallback, var(--fallback-fonts, sans-serif) !important;
+  --encore-title-font-stack: var(--sn-font), SpotifyMixUITitle, SpotifyMixUITitle-Arab, SpotifyMixUITitle-Cyrl, SpotifyMixUITitle-Grek, SpotifyMixUITitle-Hebr, SpotifyMixUITitle-Thai, DevanagariFallback, var(--fallback-fonts, sans-serif) !important;
+  --encore-variable-font-stack: var(--sn-font), SpotifyMixUITitleVariable, SpotifyMixUITitleVariable-Arab, SpotifyMixUITitleVariable-Cyrl, SpotifyMixUITitleVariable-Grek, SpotifyMixUITitleVariable-Hebr, SpotifyMixUITitleVariable-Thai, DevanagariFallback, var(--fallback-fonts, sans-serif) !important;
+}
+
+/* Encore's shadow token for overlays (popovers, dialogs): a slab, not a black drop shadow. */
+:root {
+  --encore-overlay-box-shadow: var(--sn-raised-3) !important;
+}
+
+/* Encore tokens Spicetify leaves hard-coded: map them to the palette. */
+.encore-dark-theme,
+.encore-dark-theme .encore-base-set,
+.encore-light-theme,
+.encore-light-theme .encore-base-set {
+  --background-press: var(--spice-highlight);
+  --background-elevated-press: var(--spice-highlight);
+  --background-tinted-base: var(--sn-hover-tint);
+  --essential-subdued: var(--spice-subtext);
+  --decorative-subdued: rgba(var(--spice-rgb-neu-dark), 0.45);
+  --text-negative: var(--spice-notification-error);
+  --essential-negative: var(--spice-notification-error);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+/* ==== Layout ==== */
+/* Floating slabs: every panel is a raised-3 slab on the shared surface.
+   Spotify sets --panel-gap inline on .Root from JS; !important wins over it. */
+.Root {
+  --panel-gap: var(--sn-gap-slab) !important;
+}
+
+#Desktop_LeftSidebar_Id,
+#main-view,
+#Desktop_PanelContainer_Id,
+[data-testid="now-playing-bar"] {
+  background-color: var(--spice-main) !important;
+  border-radius: var(--sn-r-slab) !important;
+  box-shadow: var(--sn-raised-3);
+}
+
+#main-view {
+  overflow: hidden;
+}
+
+/* The player bar's grid wrapper sits above the panels (z-index) with a surface background
+   across its top padding, which covers the panels' bottom shadows. */
+div:has(> [data-testid="now-playing-bar"]) {
+  background-color: transparent !important;
+}
+
+/* Right panel: its wrapper clips (overflow: hidden, for the slide animation), which cuts off
+   the panel's shadow. The wrapper carries the slab treatment instead. */
+div:has(> div > #Desktop_PanelContainer_Id) {
+  background-color: var(--spice-main) !important;
+  border-radius: var(--sn-r-slab) !important;
+  box-shadow: var(--sn-raised-3);
+}
+#Desktop_PanelContainer_Id {
+  box-shadow: none !important;
+}
+
+/* Spotify paints inner panel layers with their own backgrounds; one material only. */
+.YourLibraryX,
+#Desktop_LeftSidebar_Id > nav > div,
+.main-view-container,
+[data-testid="now-playing-bar"] > div {
+  background-color: transparent !important;
+}
+
+/* ==== Controls (shared) ==== */
+/* Keyboard focus is always visible. */
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible {
+  outline: var(--sn-focus) !important;
+  outline-offset: 3px;
+}
+
+/* Raised icon button: the one recipe for every icon-only tertiary button we style. */
+#global-nav-bar [data-encore-id="buttonTertiary"]:not(form[role="search"] *),
+[data-testid="now-playing-bar"] [data-encore-id="buttonTertiary"],
+#Desktop_LeftSidebar_Id [data-encore-id="buttonTertiary"][class*="--icon-only"]:not([role="row"] *),
+#Desktop_PanelContainer_Id [data-encore-id="buttonTertiary"][class*="--icon-only"]:not([role="row"] *, [role="listitem"] *, [data-encore-id="listRow"] *) {
+  display: inline-grid !important;
+  place-items: center;
+  inline-size: 36px !important;
+  block-size: 36px !important;
+  min-inline-size: 36px;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background-color: var(--spice-main) !important;
+  box-shadow: var(--sn-raised-1);
+  transform: none !important;
+  transition: box-shadow var(--sn-ease), color var(--sn-ease);
+}
+
+/* One icon size per area, so every button in a row reads the same. */
+#global-nav-bar [data-encore-id="buttonTertiary"]:not(form[role="search"] *) svg {
+  inline-size: 18px !important;
+  block-size: 18px !important;
+}
+
+/* On: toggled (aria-checked) or marked active by Spotify (bright-accent colour class). */
+#global-nav-bar [data-encore-id="buttonTertiary"]:not(form[role="search"] *)[aria-checked="true"],
+[data-testid="now-playing-bar"] [data-encore-id="buttonTertiary"][aria-checked="true"],
+[data-testid="now-playing-bar"] [data-encore-id="buttonTertiary"].encore-internal-color-text-bright-accent,
+#Desktop_PanelContainer_Id [data-encore-id="buttonTertiary"][class*="--icon-only"]:not([role="row"] *, [role="listitem"] *, [data-encore-id="listRow"] *):is([aria-checked="true"], .encore-internal-color-text-bright-accent) {
+  box-shadow: var(--sn-inset-1);
+  color: var(--spice-button-active) !important;
+}
+
+/* Pressed: flips to inset instantly. */
+#global-nav-bar [data-encore-id="buttonTertiary"]:not(form[role="search"] *):active,
+[data-testid="now-playing-bar"] [data-encore-id="buttonTertiary"]:active,
+#Desktop_LeftSidebar_Id [data-encore-id="buttonTertiary"]:not([role="row"] *):active,
+#Desktop_PanelContainer_Id [data-encore-id="buttonTertiary"][class*="--icon-only"]:not([role="row"] *, [role="listitem"] *, [data-encore-id="listRow"] *):active {
+  box-shadow: var(--sn-inset-1);
+  transition: none;
+}
+
+/* Disabled: flat, faded, no hover. */
+#global-nav-bar [data-encore-id="buttonTertiary"]:not(form[role="search"] *):is([disabled], [aria-disabled="true"]),
+[data-testid="now-playing-bar"] [data-encore-id="buttonTertiary"]:is([disabled], [aria-disabled="true"]) {
+  box-shadow: none;
+  opacity: var(--sn-disabled-opacity);
+}
+
+/* Primary icon-only buttons (play): accent fill, raised.
+   The shadow sits on the inner span: Spotify hides hover play buttons by fading that span. */
+[data-encore-id="buttonPrimary"][data-is-icon-only="true"] {
+  border-radius: 50% !important;
+  transform: none !important;
+}
+[data-encore-id="buttonPrimary"][data-is-icon-only="true"] > span:first-child {
+  background-color: var(--spice-button-active) !important;
+  color: var(--spice-on-accent) !important;
+  border-radius: 50% !important;
+  box-shadow: var(--sn-raised-1);
+  transform: none !important;
+  transition: box-shadow var(--sn-ease), opacity var(--sn-ease);
+}
+[data-encore-id="buttonPrimary"][data-is-icon-only="true"]:active > span:first-child {
+  box-shadow: var(--sn-inset-1);
+  transition: none;
+}
+
+/* ==== Top bar ==== */
+#global-nav-bar {
+  background-color: transparent !important;
+}
+/* Home button and search share one centre line (Spotify top-aligns the 36px button to the 48px field). */
+#global-nav-bar div:has(> div > form[role="search"]) {
+  align-items: center;
+}
+/* Studio is an image button: same raised circle as the other icon buttons. */
+#global-nav-bar button:has(> img:only-child) {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 36px;
+  block-size: 36px;
+  border-radius: 50%;
+  background-color: var(--spice-main);
+  box-shadow: var(--sn-raised-1);
+}
+#global-nav-bar button:has(> img:only-child) > img {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+/* Search: inset pill. The input itself is made transparent so the form carries the depth. */
+#global-nav-bar form[role="search"] {
+  border-radius: var(--sn-r-pill) !important;
+  background-color: var(--spice-main) !important;
+  box-shadow: var(--sn-inset-1);
+}
+#global-nav-bar form[role="search"] input {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  color: var(--spice-text) !important;
+}
+#global-nav-bar form[role="search"] input::placeholder {
+  color: var(--spice-subtext);
+}
+
+/* Home button: the button next to the search form. On the home route (class set by theme.js)
+   it shows its on-state: inset with an accent icon. */
+.sn-route-home #global-nav-bar div:has(> div > form[role="search"]) > button[data-encore-id="buttonTertiary"] {
+  box-shadow: var(--sn-inset-1);
+  color: var(--spice-button-active) !important;
+}
+
+/* Spicetify's custom-app nav links (Marketplace) sit in a 36px scroller that clips shadows. */
+.custom-navlinks-scrollable_container .spicetify-sc-scroller,
+.custom-navlinks-scrollable_container .spicetify-sc-contentArea {
+  overflow: visible !important;
+  mask-image: none !important;
+}
+
+/* Profile avatar: image in a raised circular frame. */
+#global-nav-bar [data-testid="user-widget-link"] > span {
+  inline-size: 28px !important;
+  block-size: 28px !important;
+}
+
+/* ==== Player bar ==== */
+[data-testid="now-playing-bar"] {
+  padding: var(--sn-space-2) var(--sn-space-5) !important;
+  min-block-size: 88px;
+}
+
+[data-testid="player-controls"] [data-encore-id="buttonTertiary"] {
+  inline-size: 40px !important;
+  block-size: 40px !important;
+}
+
+[data-testid="player-controls"] [data-testid="control-button-playpause"] {
+  margin-inline: var(--sn-space-3);
+}
+[data-testid="player-controls"] [data-testid="control-button-playpause"] > span:first-child {
+  inline-size: 52px !important;
+  block-size: 52px !important;
+  box-shadow: var(--sn-raised-2);
+}
+[data-testid="player-controls"] [data-testid="control-button-playpause"]:active > span:first-child {
+  box-shadow: var(--sn-inset-2);
+}
+
+/* Transport row: every button on the play button's centre line. */
+[data-testid="general-controls"],
+[data-testid="general-controls"] > div {
+  align-items: center;
+}
+[data-testid="general-controls"] {
+  gap: var(--sn-space-3);
+  margin-block-end: var(--sn-space-2);
+}
+[data-testid="player-controls"] [data-testid="control-button-playpause"] {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 52px;
+  block-size: 52px;
+}
+
+/* Extra controls (lyrics, queue, devices, volume, mini player, full screen):
+   controls need at least 10px between them, or the raised circles touch. */
+[data-testid="now-playing-bar"] div:has(> [data-testid="lyrics-button"]),
+[data-testid="now-playing-bar"] [data-testid="volume-bar"] {
+  gap: var(--sn-space-3);
+}
+[data-testid="now-playing-bar"] [data-testid="volume-bar"] {
+  margin-inline-end: var(--sn-space-2);
+}
+
+/* Cover art in a raised frame. */
+[data-testid="now-playing-widget-v2"] [data-testid="cover-art-container"] {
+  padding: var(--sn-space-1);
+  border-radius: var(--sn-r-control);
+  background-color: var(--spice-main);
+  box-shadow: var(--sn-raised-1);
+  overflow: visible;
+}
+[data-testid="now-playing-widget-v2"] [data-testid="cover-art-container"] img,
+[data-testid="now-playing-widget-v2"] [data-testid="cover-art-button"] {
+  border-radius: calc(var(--sn-r-control) - var(--sn-space-1)) !important;
+}
+
+[data-testid="playback-position"],
+[data-testid="playback-duration"] {
+  font-variant-numeric: tabular-nums;
+  color: var(--spice-subtext) !important;
+}
+
+/* Sliders (progress + volume): inset track, accent fill, raised thumb that is always visible. */
+[data-testid="now-playing-bar"] [data-testid="progress-bar"] {
+  --bg-color: var(--spice-main);
+  --mg-color: rgba(var(--spice-rgb-button-active), 0.35);
+  --fg-color: var(--spice-button-active);
+  --is-active-fg-color: var(--spice-button-active);
+  --progress-bar-height: 8px;
+  --progress-bar-radius: var(--sn-r-pill);
+  block-size: 20px;
+}
+[data-testid="now-playing-bar"] [data-testid="progress-bar-background"] {
+  box-shadow: var(--sn-inset-1);
+}
+[data-testid="now-playing-bar"] [data-testid="progress-bar-handle"] {
+  display: flex !important;
+  inline-size: 16px !important;
+  block-size: 16px !important;
+  margin-inline-start: -8px !important;
+  background-color: var(--spice-main) !important;
+  box-shadow: var(--sn-raised-1);
+}
+
+
+
+/* Raised text pill: tertiary buttons with a label (Create, sort). */
+#Desktop_LeftSidebar_Id [data-encore-id="buttonTertiary"]:not([class*="--icon-only"]):not([role="row"] *) {
+  padding: var(--sn-space-2) var(--sn-space-4) !important;
+  border-radius: var(--sn-r-pill) !important;
+  background-color: var(--spice-main) !important;
+  box-shadow: var(--sn-raised-1);
+  transform: none !important;
+  transition: box-shadow var(--sn-ease), color var(--sn-ease);
+}
+
+/* Chips (library filters, home filters): raised pill; selected = inset + accent text. */
+[data-encore-id="chip"] {
+  border-radius: var(--sn-r-pill) !important;
+  background-color: var(--spice-main) !important;
+  box-shadow: var(--sn-raised-1);
+  transition: box-shadow var(--sn-ease), color var(--sn-ease);
+}
+[data-encore-id="chip"] > span {
+  background-color: transparent !important;
+  color: var(--spice-text) !important;
+}
+[data-encore-id="chip"][aria-checked="true"] {
+  box-shadow: var(--sn-inset-1);
+}
+[data-encore-id="chip"][aria-checked="true"] > span {
+  color: var(--spice-button-active) !important;
+  font-weight: 600;
+}
+[data-encore-id="chip"]:active {
+  box-shadow: var(--sn-inset-1);
+  transition: none;
+}
+
+/* Chip rows need room for shadows (Spotify's carousels clip at the edges). */
+[role="listbox"][aria-orientation="horizontal"],
+[role="listbox"][data-orientation="horizontal"],
+[role="list"]:has([data-encore-id="chip"]) {
+  padding: var(--sn-space-2) var(--sn-space-2);
+  mask-image: none !important;
+}
+
+/* ==== Library ==== */
+/* The library header gets a black drop shadow when the list scrolls under it. The design has no
+   plain dark shadows; the header stays flat on the slab. */
+.YourLibraryX > div:first-child {
+  box-shadow: none !important;
+}
+
+/* Chip carousel scroll arrows sit in an absolute overlay; centre them on the (padded) chip row. */
+#Desktop_LeftSidebar_Id div[role="presentation"]:has([role="listbox"]) + div {
+  align-items: center;
+}
+#Desktop_LeftSidebar_Id [role="row"] {
+  border-radius: var(--sn-r-control);
+  transition: background-color var(--sn-ease), box-shadow var(--sn-ease);
+}
+#Desktop_LeftSidebar_Id [role="row"]:hover {
+  background-color: var(--sn-hover-tint);
+}
+#Desktop_LeftSidebar_Id [role="row"][aria-selected="true"] {
+  background-color: transparent;
+  box-shadow: var(--sn-inset-1);
+}
+/* Spotify paints hover/selected backgrounds on inner layers; the row carries the state. */
+#Desktop_LeftSidebar_Id [role="row"] [role="gridcell"] > div,
+#Desktop_LeftSidebar_Id [role="row"] [role="gridcell"] > div::before,
+#Desktop_LeftSidebar_Id [role="row"] [role="gridcell"] > div::after {
+  background-color: transparent !important;
+}
+#Desktop_LeftSidebar_Id [role="row"] img {
+  border-radius: var(--sn-r-thumb) !important;
+}
+
+/* ==== Home ==== */
+/* Colour-washed backdrop behind the top of the feed: empty layer divs next to the home section. */
+div:has(> section[data-testid="home-page"]) > div:empty {
+  background: none !important;
+}
+
+/* Shortcut tiles (compact grid at the top of home): raised-1 tiles, art flush left. */
+/* The outer wrapper clips (overflow: hidden), so it carries the tile treatment. */
+div:has(> div > [data-testid="shortcut-background"]) {
+  border-radius: var(--sn-r-control) !important;
+  background-color: var(--spice-main) !important;
+  box-shadow: var(--sn-raised-1);
+  overflow: hidden;
+}
+div:has(> [data-testid="shortcut-background"]),
+[data-testid="shortcut-background"] {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+div:has(> div > [data-testid="shortcut-background"]):hover [data-testid="shortcut-background"] {
+  background-color: var(--sn-hover-tint) !important;
+}
+
+/* Shelves: each card sits in a clipping grid row, inside a horizontal scroller (overflow-x
+   forces overflow-y to clip). Let the rows overflow, and give the scroller vertical room
+   so the cards' highlight (top) and shade (bottom) are not cut off. */
+section[data-testid="component-shelf"] [role="grid"] [role="row"] {
+  overflow: visible !important;
+}
+section[data-testid="component-shelf"] [style*="scroll-padding"] {
+  padding-block: var(--sn-space-4);
+}
+/* Cards in a shelf fill their (equal-height) cell, so raised tiles line up. */
+section[data-testid="component-shelf"] [role="row"] > [role="gridcell"] > [role="presentation"] {
+  block-size: 100%;
+}
+section[data-testid="component-shelf"] [role="row"] [data-encore-id="card"] {
+  flex: 1 1 auto;
+}
+
+/* Shelves: Spotify fades the scroll edges with dark gradients. The material is matte: remove them. */
+section[data-testid="component-shelf"] > div::before,
+section[data-testid="component-shelf"] > div::after {
+  background-image: none !important;
+}
+
+/* ==== Entity pages (playlist, album, artist, show, liked songs) ==== */
+/* Spotify paints colour-extracted washes on empty layer divs: header, action bar, sticky top bar. */
+[data-testid="entity-header"] > div:empty,
+#main-view [data-testid$="-page"] > div:empty,
+#main-view [data-testid$="-page"] > div > div:empty[style*="--background-base"] {
+  background: none !important;
+}
+/* Sticky bars that fade in on scroll (home chip row, page headers) paint an empty layer with an
+   inline --background-base (a grey/artwork colour). Sticky bars must stay opaque, so the layer
+   becomes the surface rather than transparent. */
+/* The home chip row's layer is the empty div just before the chips; Spotify only sometimes sets the
+   inline variable, and adds a 60% black scrim in ::after. */
+#main-view div:empty[style*="--background-base"],
+#main-view div:has(> div:empty + div [data-encore-id="chip"]) > div:empty {
+  background-color: var(--spice-main) !important;
+  background-image: none !important;
+}
+#main-view div:empty[style*="--background-base"]::after,
+#main-view div:has(> div:empty + div [data-encore-id="chip"]) > div:empty::after {
+  background: none !important;
+}
+
+/* Sticky top bar inside the main view (fades in on scroll). */
+#main-view [data-testid="topbar"] > div[style*="--background-base"] {
+  background-color: var(--spice-main) !important;
+}
+#main-view [data-testid="topbar"] > div:empty:not([style*="--background-base"]),
+#main-view [data-testid="topbar"] > div[style*="--background-base"] > div:empty {
+  background: none !important; /* includes a 60% black scrim nested in the bar */
+}
+
+/* The header sets light text colours for its dark wash; the wash is gone, so use the roles. */
+[data-testid="entity-header"] .encore-internal-color-text-subdued,
+[data-testid="entity-header"] .encore-internal-color-text-subdued a {
+  color: var(--spice-subtext) !important;
+}
+[data-testid="entity-header"] .encore-internal-color-text-base,
+[data-testid="entity-header"] a {
+  color: var(--spice-text) !important;
+}
+
+[data-testid="entity-header"] h1 {
+  font-weight: 800 !important;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--spice-text) !important;
+}
+
+/* Cover art in a raised frame. */
+[data-testid="entity-header"] img {
+  padding: var(--sn-space-2);
+  border-radius: var(--sn-r-card) !important;
+  background-color: var(--spice-main);
+  box-shadow: var(--sn-raised-2) !important;
+}
+
+/* Action bar: big play raised-2; shuffle, save, download, more as raised-1 circles. */
+[data-testid="action-bar"] [data-encore-id="buttonPrimary"][data-is-icon-only="true"] > span:first-child {
+  box-shadow: var(--sn-raised-2);
+}
+[data-testid="action-bar"] [data-encore-id="buttonTertiary"][class*="--icon-only"] {
+  display: inline-grid !important;
+  place-items: center;
+  inline-size: 40px !important;
+  block-size: 40px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background-color: var(--spice-main) !important;
+  box-shadow: var(--sn-raised-1);
+  transform: none !important;
+  transition: box-shadow var(--sn-ease), color var(--sn-ease);
+}
+[data-testid="action-bar"] [data-encore-id="buttonTertiary"][class*="--icon-only"]:is([aria-checked="true"], .encore-internal-color-text-bright-accent),
+[data-testid="action-bar"] [data-encore-id="buttonTertiary"][class*="--icon-only"]:active {
+  box-shadow: var(--sn-inset-1);
+}
+[data-testid="action-bar"] [data-encore-id="buttonTertiary"][class*="--icon-only"]:is([aria-checked="true"], .encore-internal-color-text-bright-accent) {
+  color: var(--spice-button-active) !important;
+}
+
+/* Text buttons (primary and secondary): raised pill, surface fill, text colour.
+   The accent stays reserved for play buttons and on-states. */
+[data-encore-id="buttonPrimary"]:not([data-is-icon-only="true"]) > span:first-child,
+[data-encore-id="buttonSecondary"]:not([data-is-icon-only="true"]) {
+  background-color: var(--spice-main) !important;
+  color: var(--spice-text) !important;
+  border: 0 !important;
+  font-weight: 700;
+  border-radius: var(--sn-r-pill) !important;
+  box-shadow: var(--sn-raised-1);
+  transform: none !important;
+}
+[data-encore-id="buttonPrimary"]:not([data-is-icon-only="true"]):active > span:first-child,
+[data-encore-id="buttonSecondary"]:not([data-is-icon-only="true"]):active {
+  box-shadow: var(--sn-inset-1);
+}
+
+/* ==== Track list ==== */
+/* [role=row] > [role=presentation] is the visible row. Rows stay flat: hover = tint, selected = inset. */
+#main-view [role="grid"] [role="row"] > [role="presentation"],
+.Root [aria-label] > [role="grid"] [role="row"] > [role="presentation"] {
+  border-radius: var(--sn-r-control) !important;
+  transition: background-color var(--sn-ease), box-shadow var(--sn-ease);
+}
+#main-view [role="grid"] [role="row"]:hover > [role="presentation"] {
+  background-color: var(--sn-hover-tint) !important;
+}
+#main-view [role="grid"] [role="row"][aria-selected="true"] > [role="presentation"] {
+  background-color: transparent !important;
+  box-shadow: var(--sn-inset-1);
+}
+#main-view [role="grid"] [role="row"] img {
+  border-radius: var(--sn-r-thumb) !important;
+}
+#main-view [role="grid"] [role="gridcell"] {
+  font-variant-numeric: tabular-nums;
+}
+/* Column header row: sentence case, subtext, one hairline below. */
+#main-view [role="grid"] [role="row"][aria-rowindex="1"] [role="columnheader"] {
+  color: var(--spice-subtext) !important;
+  font-weight: 500;
+  text-transform: none;
+}
+
+/* ==== Menus and tooltips ==== */
+/* Context menus and dropdowns: slabs of the material, flat items, tint on hover. */
+#context-menu [role="menu"],
+[data-encore-id="menu"],
+[data-tippy-root] [role="menu"] {
+  background-color: var(--spice-main) !important;
+  border-radius: var(--sn-r-card) !important;
+  box-shadow: var(--sn-raised-3) !important;
+  padding: var(--sn-space-2) !important;
+}
+[role="menu"] [role="menuitem"],
+[role="menu"] [role="menuitemcheckbox"],
+[role="menu"] [role="menuitemradio"] {
+  border-radius: var(--sn-r-control) !important;
+  background-color: transparent !important;
+  color: var(--spice-text) !important;
+}
+[role="menu"] [role="menuitem"]:hover,
+[role="menu"] [role="menuitem"]:focus-visible,
+[role="menu"] [role="menuitemcheckbox"]:hover,
+[role="menu"] [role="menuitemradio"]:hover {
+  background-color: var(--sn-hover-tint) !important;
+}
+[role="menu"] [role="menuitem"] > *,
+[role="menu"] [role="menuitemcheckbox"] > *,
+[role="menu"] [role="menuitemradio"] > * {
+  background-color: transparent !important;
+}
+[role="menu"] hr,
+[role="menu"] [role="separator"] {
+  border-color: rgba(var(--spice-rgb-neu-dark), 0.45) !important;
+}
+
+/* Tooltips: small raised chips on the surface, not dark inverted boxes. */
+[data-tippy-root] .main-contextMenu-tippy,
+.encore-inverted-light-set[role="tooltip"],
+[role="tooltip"].encore-inverted-light-set {
+  background-color: var(--spice-main) !important;
+  color: var(--spice-text) !important;
+  border-radius: var(--sn-r-control) !important;
+  box-shadow: var(--sn-raised-1) !important;
+}
+
+/* ==== Search ==== */
+/* Browse tiles: Spotify gives each a saturated colour fill. Raised card on the surface instead;
+   the artwork stays, the title uses the text role. */
+#main-view [role="listitem"] > a > div[style*="background-color"] {
+  background-color: var(--spice-main) !important;
+  border-radius: var(--sn-r-card) !important;
+  box-shadow: var(--sn-raised-2);
+  transition: box-shadow var(--sn-ease);
+}
+#main-view [role="listitem"] > a:active > div[style*="background-color"] {
+  box-shadow: var(--sn-inset-2);
+  transition: none;
+}
+#main-view [role="listitem"] > a > div[style*="background-color"] > span {
+  color: var(--spice-text) !important;
+}
+#main-view [role="listitem"] > a > div[style*="background-color"] > img {
+  border-radius: var(--sn-r-thumb);
+}
+
+/* ==== Settings ==== */
+/* Each settings section is an outlined group. */
+[data-testid="settings-page"] > div:has(h2) {
+  border: var(--sn-outline);
+  border-radius: var(--sn-r-card);
+  padding: var(--sn-space-4) var(--sn-space-5);
+  margin-block-end: var(--sn-space-2);
+}
+
+/* Switches: inset track, raised knob; on = accent track. */
+[data-testid="settings-page"] label > input[type="checkbox"] + span {
+  background-color: var(--spice-main) !important;
+  border-radius: var(--sn-r-pill) !important;
+  box-shadow: var(--sn-inset-1);
+  transition: background-color var(--sn-ease);
+}
+[data-testid="settings-page"] label > input[type="checkbox"]:checked + span {
+  background-color: var(--spice-button-active) !important;
+  box-shadow: none; /* a shaded accent fill looks muddy */
+}
+[data-testid="settings-page"] label > input[type="checkbox"] + span > span {
+  background-color: var(--spice-main) !important;
+  box-shadow: var(--sn-raised-1);
+}
+[data-testid="settings-page"] label > input[type="checkbox"]:focus-visible + span {
+  outline: var(--sn-focus);
+  outline-offset: 3px;
+}
+
+/* Dropdowns: raised pill. */
+[data-testid="settings-page"] select {
+  background-color: var(--spice-main) !important;
+  color: var(--spice-text) !important;
+  border: 0 !important;
+  border-radius: var(--sn-r-pill) !important;
+  box-shadow: var(--sn-raised-1);
+  padding-inline: var(--sn-space-4) var(--sn-space-8) !important;
+  min-block-size: 36px;
+}
+
+/* ==== Cards ==== */
+[data-encore-id="card"] {
+  /* Spotify's carousel cells clip at their edges and have no gap:
+     the margin makes the gap and keeps the shadow inside the cell. */
+  margin: var(--sn-space-3);
+  --box-padding: var(--sn-space-3) !important;
+  background-color: var(--spice-main) !important;
+  border-radius: var(--sn-r-card) !important;
+  box-shadow: var(--sn-raised-2);
+  transition: box-shadow var(--sn-ease);
+}
+[data-encore-id="card"]:hover {
+  background-color: var(--spice-main) !important;
+}
+[data-encore-id="card"]:active {
+  box-shadow: var(--sn-inset-2);
+  transition: none;
+}
+[data-encore-id="card"] img {
+  border-radius: var(--sn-r-art) !important;
+}
+
+/* ==== Right panel (now playing view) ==== */
+/* Canvas: Spotify bleeds the looping video (plus dark gradient overlays) over the whole top
+   of the panel. Fit it into the art slot as framed media, and drop the overlays. */
+#Desktop_PanelContainer_Id div:has(> div > div > video) {
+  inset: 0 !important;
+  margin: 0 !important; /* Spotify pulls it out with negative margins to bleed */
+  inline-size: 100% !important;
+  block-size: 100% !important;
+  border-radius: var(--sn-r-card);
+  overflow: hidden;
+  box-shadow: var(--sn-raised-2);
+}
+#Desktop_PanelContainer_Id div:has(> div > video) > div:not(:has(video)) {
+  display: none !important;
+}
+#Desktop_PanelContainer_Id video {
+  inline-size: 100% !important;
+  block-size: 100% !important;
+  object-fit: cover;
+}
+
+/* Info sections (lyrics preview, about the artist, credits, queue preview): raised cards. */
+#Desktop_PanelContainer_Id [data-testid="lyrics-npv-section"],
+#Desktop_PanelContainer_Id section {
+  background-color: var(--spice-main) !important;
+  border-radius: var(--sn-r-card) !important;
+  box-shadow: var(--sn-raised-2);
+  overflow: hidden;
+}
+/* Lyrics preview: Spotify colours it from the artwork; use the text roles instead. */
+#Desktop_PanelContainer_Id [data-testid="lyrics-npv-section"] * {
+  color: var(--spice-text) !important;
+  background-image: none !important;
+}
+#Desktop_PanelContainer_Id [data-testid="lyrics-npv-section"] h2,
+#Desktop_PanelContainer_Id [data-testid="lyrics-npv-section"] h2 * {
+  color: var(--spice-subtext) !important;
+}
+
+/* ==== Plain drop shadows ==== */
+/* Spotify puts black drop shadows (0 8px 24px #00000080 and similar) on the wrappers around
+   artwork and around hover play buttons. Images are not made of the material, and the play
+   button's shadow lives on its inner span. These rules use an ID (beats Spotify's hashed
+   classes) but stay below the theme's own component rules in specificity, so raised frames
+   and tiles keep their shadows. Find leftovers with: scripts/inspect.sh shadows */
+#main-view img,
+#Desktop_PanelContainer_Id img,
+#main-view div:has(> img, > div > img),
+#Desktop_PanelContainer_Id div:has(> img, > div > img),
+#Desktop_LeftSidebar_Id div:has(> img, > div > img),
+#main div:has(> [data-encore-id="buttonPrimary"], > div > [data-encore-id="buttonPrimary"]) {
+  box-shadow: none;
+}
+[data-testid="cover-art-button"] *,
+[data-encore-id="listRow"] [class*="list-row__header-side"] div {
+  box-shadow: none !important;
+}
+
+/* ==== Loading states ==== */
+/* Skeletons: the placeholder shapes are shallow inset wells in the surface, waiting to be
+   filled, instead of grey blocks with a shimmer. Inset shadows on zero-size spacers are invisible. */
+[data-testid*="skeleton"]:empty,
+[data-testid*="skeleton"] :empty:not(img, svg, svg *, input),
+[data-testid="cover-art-placeholder"],
+[data-testid="related-video-card-placeholder"] {
+  background-color: var(--spice-main) !important;
+  background-image: none !important;
+  box-shadow: var(--sn-inset-1) !important;
+}
+[data-testid*="skeleton"] :empty::after,
+[data-testid*="skeleton"]:empty::after {
+  background-image: none !important;
+}
+
+/* ==== Lyrics ==== */
+/* Spotify colours lyrics from the artwork through inline custom properties; map them to the roles.
+   Past lines subtext, current line text, upcoming lines subtext at 70 %. */
+[style*="--lyrics-color-background"] {
+  --lyrics-color-active: var(--spice-text) !important;
+  --lyrics-color-inactive: rgba(var(--spice-rgb-subtext), 0.7) !important;
+  --lyrics-color-passed: var(--spice-subtext) !important;
+  --lyrics-color-background: var(--spice-main) !important;
+  --lyrics-color-messaging: var(--spice-subtext) !important;
+}
+
+/* Cinema mode (lyrics / now playing over the panels): Spotify frames it with a 20px black
+   outline and an artwork-coloured gradient. Make it a slab of the material instead. */
+.Root > div > div:has([style*="--cinema-mode-bg-color-from"]) {
+  outline: none !important;
+  border-radius: var(--sn-r-slab) !important;
+  background-color: var(--spice-main) !important;
+  box-shadow: var(--sn-raised-3);
+}
+.Root > div > div:has([style*="--cinema-mode-bg-color-from"]) div:has([style*="--cinema-mode-bg-color-from"]) {
+  outline: none !important;
+  border-radius: var(--sn-r-slab) !important;
+}
+[style*="--cinema-mode-bg-color-from"] {
+  --cinema-mode-bg-color-from: var(--spice-main) !important;
+  --cinema-mode-bg-color-to: var(--spice-main) !important;
+}
+[style*="--cinema-mode-bg-color-from"] > div:empty {
+  background: none !important;
+}
+/* Cinema header: a dark scrim behind the title and buttons. */
+[style*="--header-text-color"] {
+  --header-text-color: var(--spice-text) !important;
+  --header-buttons-hover-bg: var(--sn-hover-tint) !important;
+}
+[style*="--header-text-color"]::before {
+  background-image: none !important;
+}
+
+/* ==== FRAGILE: hashed classes, recheck after Spotify updates ==== */
+/* Each rule names the element it targets. Prefer moving rules out of here when a stable hook appears. */
+
+/* (empty) */
