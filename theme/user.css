@@ -605,6 +605,21 @@ section[data-testid="component-shelf"] > div::after {
   color: var(--spice-button-active) !important;
 }
 
+/* Invite-collaborators "+" beside the owner name: small raised circle, inset when pressed. */
+[data-testid="entity-header"] .main-entityHeader-creatorWrapper button {
+  background-color: var(--spice-main) !important;
+  color: var(--spice-text);
+  border: 0 !important;
+  border-radius: 50% !important;
+  box-shadow: var(--sn-raised-1);
+  transform: none !important;
+  transition: box-shadow var(--sn-ease), color var(--sn-ease);
+}
+[data-testid="entity-header"] .main-entityHeader-creatorWrapper button:active {
+  box-shadow: var(--sn-inset-1);
+  transition: none;
+}
+
 /* Text buttons (primary and secondary): raised pill, surface fill, text colour.
    The accent stays reserved for play buttons and on-states. */
 [data-encore-id="buttonPrimary"]:not([data-is-icon-only="true"]) > span:first-child,
