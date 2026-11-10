@@ -597,6 +597,10 @@ section[data-testid="component-shelf"] > div::after {
   transform: none !important;
   transition: box-shadow var(--sn-ease), color var(--sn-ease);
 }
+[data-testid="action-bar"] [data-encore-id="buttonTertiary"][class*="--icon-only"] svg {
+  inline-size: 22px !important;
+  block-size: 22px !important;
+}
 [data-testid="action-bar"] [data-encore-id="buttonTertiary"][class*="--icon-only"]:is([aria-checked="true"], .encore-internal-color-text-bright-accent),
 [data-testid="action-bar"] [data-encore-id="buttonTertiary"][class*="--icon-only"]:active {
   box-shadow: var(--sn-inset-1);
