@@ -60,6 +60,13 @@
   --sn-space-6: 24px;
   --sn-space-8: 32px;
   --sn-gap-slab: var(--sn-space-5);
+  /* v2: width of the stage column (player + right panel). */
+  --sn-stage-w: clamp(340px, 24vw, 400px);
+  /* v2: compact entity headers. */
+  --sn-header-art: 176px;
+  /* v2: listening mode panel column. */
+  --sn-listen-panel-w: clamp(360px, 32vw, 520px);
+  --sn-hero-h: clamp(180px, 26vh, 300px);
 
   /* States */
   --sn-hover-tint: rgba(var(--spice-rgb-text), 0.05);
@@ -928,6 +935,913 @@ img[src*="equaliser-animated-green"] {
 }
 [style*="--header-text-color"]::before {
   background-image: none !important;
+}
+
+/* ======================================================================
+   v2 features. Every rule below is gated by a class theme.js sets on <html> only when the
+   feature is switched on and its Spotify nodes exist (see theme.js). Without the class, the
+   v1 rules above are the fallback.
+   ====================================================================== */
+
+/* ==== Stage layout (html.sn-stage) ==== */
+/* The root grid is re-mapped: the top bar becomes the head of the main column and the player
+   the head of the right column, with the right panel under it. No DOM nodes move. */
+html.sn-stage div:has(> #main-view) {
+  grid-template-areas:
+    "top-banner top-banner top-banner"
+    "left-sidebar global-nav now-playing-bar"
+    "left-sidebar main-view now-playing-bar"
+    "left-sidebar main-view right-sidebar" !important;
+  grid-template-rows: auto auto auto minmax(0, 1fr) !important;
+  grid-template-columns: auto minmax(0, 1fr) var(--sn-stage-w) !important;
+}
+
+/* One slab for the whole stage column (player + panel), drawn behind both grid items. */
+html.sn-stage div:has(> #main-view)::before {
+  content: "";
+  grid-column: 3;
+  grid-row: 2 / 5;
+  border-radius: var(--sn-r-slab);
+  background-color: var(--spice-main);
+  box-shadow: var(--sn-raised-3);
+  pointer-events: none;
+}
+
+html.sn-stage #global-nav-bar {
+  grid-area: global-nav !important;
+  margin: 0 !important;
+  padding: 0 var(--sn-space-2) !important;
+  block-size: 56px !important;
+}
+
+html.sn-stage div:has(> [data-testid="now-playing-bar"]) {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-block-size: 0;
+}
+html.sn-stage [data-testid="now-playing-bar"],
+html.sn-stage div:has(> div > #Desktop_PanelContainer_Id) {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+html.sn-stage div:has(> div > #Desktop_PanelContainer_Id) {
+  inline-size: 100% !important;
+  min-inline-size: 0 !important;
+}
+html.sn-stage div:has(> div > #Desktop_PanelContainer_Id) > div,
+html.sn-stage #Desktop_PanelContainer_Id {
+  inline-size: 100% !important;
+}
+/* Spotify's peek wrappers keep their own (resizable) width and a background: fill the column. */
+html.sn-stage .Root__right-sidebar-peek,
+html.sn-stage .Root__right-sidebar-peek div:has(#Desktop_PanelContainer_Id) {
+  inline-size: 100% !important;
+  min-inline-size: 0 !important;
+  max-inline-size: none !important;
+  background-color: transparent !important;
+}
+html.sn-stage .Root__right-sidebar-peek {
+  border-radius: 0 0 var(--sn-r-slab) var(--sn-r-slab);
+  overflow: hidden;
+}
+/* The panel's resize handle would fight the fixed stage width. */
+html.sn-stage div:has(> #main-view) > div:has(.Root__right-sidebar-peek) > .LayoutResizer__resize-bar {
+  display: none !important;
+}
+
+/* ==== Main column head (html.sn-stage) ==== */
+/* The old full-width top bar is now the head of the main column: a wide search pill on the
+   left, account buttons on the right. Spotify centres search absolutely and collapses it to
+   an icon when the bar is narrow; in the head it always stays a full field. */
+html.sn-stage #global-nav-bar {
+  justify-content: flex-start !important;
+  gap: var(--sn-space-4);
+}
+html.sn-stage #global-nav-bar > div:has(form[role="search"]) {
+  position: static !important;
+  flex: 1 1 auto;
+  justify-content: flex-start !important;
+  inline-size: auto !important;
+  min-inline-size: 0;
+}
+html.sn-stage #global-nav-bar div:has(> div > form[role="search"]) {
+  inline-size: 100% !important;
+  min-inline-size: 0 !important;
+  max-inline-size: 560px !important;
+}
+html.sn-stage #global-nav-bar div:has(> form[role="search"]) {
+  flex: 1 1 auto;
+}
+html.sn-stage #global-nav-bar form[role="search"] {
+  inline-size: 100% !important;
+}
+html.sn-stage #global-nav-bar form[role="search"] > :last-child {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+html.sn-stage #global-nav-bar form[role="search"] input {
+  color: var(--spice-text) !important;
+  padding-inline-end: calc(var(--sn-space-8) * 2) !important; /* room for the browse button */
+}
+html.sn-stage #global-nav-bar form[role="search"] input::placeholder {
+  color: var(--spice-subtext) !important;
+}
+html.sn-stage #global-nav-bar > div:last-child {
+  margin-inline-start: auto;
+}
+
+/* ==== Stage player (html.sn-stage) ==== */
+/* Calm by design: one raised object (the transport capsule), everything else flat icons and
+   thin lines on the slab. The player bar becomes one grid of six equal columns; Spotify's
+   wrappers get display: contents, so every control is a grid item placed by name.
+     art   art   art   art   art   art
+     meta  meta  meta  meta  meta  like
+     shuf  prev  play  play  next  rep    <- prev/play/next sit in the raised capsule (::before)
+     bar   bar   bar   bar   bar   bar    <- waveform, or a thin progress line
+     pos   pos   pos   dur   dur   dur
+     lyr   que   dev   vol   vol   vol    <- panel tabs, then volume */
+html.sn-stage [data-testid="now-playing-bar"] {
+  padding: var(--sn-space-6) var(--sn-space-6) var(--sn-space-5) !important;
+  min-block-size: 0 !important;
+  block-size: auto !important;
+  min-inline-size: 0 !important;
+  inline-size: 100% !important;
+}
+html.sn-stage [data-testid="now-playing-bar"] > div {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-rows: auto;
+  grid-template-areas:
+    "art art art art art art"
+    "meta meta meta meta meta like"
+    "shuf prev play play next rep"
+    "bar bar bar bar bar bar"
+    "pos pos pos dur dur dur"
+    "lyr que dev vol vol vol";
+  align-items: center;
+  justify-items: center;
+  column-gap: 0;
+  row-gap: var(--sn-space-5);
+  block-size: auto !important;
+  min-block-size: 0 !important;
+}
+html.sn-stage [data-testid="now-playing-bar"] > div > div:not([class^="sn-"]),
+html.sn-stage [data-testid="now-playing-bar"] > div > div:first-child > div,
+html.sn-stage [data-testid="now-playing-widget-v2"],
+html.sn-stage [data-testid="player-controls"],
+html.sn-stage [data-testid="player-controls"] > div,
+html.sn-stage [data-testid="general-controls"],
+html.sn-stage [data-testid="general-controls"] > div,
+html.sn-stage [data-testid="now-playing-bar"] div:has(> [data-testid="lyrics-button"]),
+html.sn-stage [data-testid="now-playing-bar"] div:has(> div > [data-testid="control-button-queue"]),
+html.sn-stage [data-testid="now-playing-bar"] div:has(> [data-testid="control-button-queue"]),
+html.sn-stage [data-testid="lyrics-button"] ~ span:has(> button) {
+  display: contents !important;
+}
+/* The progress row keeps its own box: Spotify lays out time, slider and time inside it. */
+html.sn-stage [data-testid="player-controls"] > div:has([data-testid="playback-progressbar"]) {
+  display: contents !important;
+}
+
+/* Art: the large cover (injected by theme.js) in a raised-2 frame. The size shrinks with the
+   window height so the panel under the player keeps room. */
+html.sn-stage .sn-stage-art {
+  grid-area: art;
+  justify-self: center;
+  position: relative;
+  inline-size: min(100%, max(160px, calc(100vh - 700px)));
+  aspect-ratio: 1;
+  padding: var(--sn-space-2);
+  border-radius: var(--sn-r-card);
+  background-color: var(--spice-main);
+  box-shadow: var(--sn-raised-2);
+  margin-block-end: var(--sn-space-2);
+}
+html.sn-stage .sn-stage-art > img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  border-radius: calc(var(--sn-r-card) - var(--sn-space-2));
+}
+html.sn-stage .sn-stage-art.sn-empty > img {
+  visibility: hidden;
+}
+html.sn-stage .sn-stage-art.sn-empty {
+  box-shadow: var(--sn-inset-2);
+}
+html.sn-stage [data-testid="now-playing-widget-v2"] [data-testid="cover-art-container"] {
+  display: none !important;
+}
+
+/* Title and artist; the like button sits flat at the end of the row. The audio quality badge
+   ("Lossless") is hidden: it is a fact, not something to look at while listening. */
+html.sn-stage [data-testid="now-playing-widget-v2"] > div:nth-child(2) {
+  grid-area: meta;
+  justify-self: stretch;
+  min-inline-size: 0;
+  margin: 0 !important;
+}
+html.sn-stage [data-testid="now-playing-widget-v2"] [data-testid="context-item-link"],
+html.sn-stage [data-testid="now-playing-widget-v2"] [data-testid="context-item-link"] * {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--spice-text) !important;
+}
+html.sn-stage [data-testid="now-playing-widget-v2-byline"],
+html.sn-stage [data-testid="now-playing-widget-v2-byline"] a {
+  font-size: 0.9375rem !important;
+  color: var(--spice-subtext) !important;
+}
+html.sn-stage [data-testid="now-playing-widget-v2"] [data-testid="context-item-info-quality"] {
+  display: none !important;
+}
+html.sn-stage [data-testid="now-playing-widget-v2"] > div:last-child {
+  grid-area: like;
+  justify-self: end;
+  margin: 0 !important;
+}
+
+/* Every icon button in the stage is flat: no circle, `subtext` icon, `text` on hover, accent
+   when on (Spotify's small dot under shuffle and repeat stays as the second signal). Pressing
+   briefly shows the inset. */
+html.sn-stage [data-testid="now-playing-bar"] [data-encore-id="buttonTertiary"] {
+  inline-size: 36px !important;
+  block-size: 36px !important;
+  min-inline-size: 36px;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  color: var(--spice-subtext) !important;
+}
+html.sn-stage [data-testid="now-playing-bar"] [data-encore-id="buttonTertiary"]:hover {
+  color: var(--spice-text) !important;
+}
+html.sn-stage [data-testid="now-playing-bar"] [data-encore-id="buttonTertiary"]:is([aria-checked="true"], [aria-pressed="true"], .encore-internal-color-text-bright-accent) {
+  box-shadow: none !important;
+  color: var(--spice-button-active) !important;
+}
+html.sn-stage [data-testid="now-playing-bar"] [data-encore-id="buttonTertiary"]:active {
+  box-shadow: var(--sn-inset-1) !important;
+}
+html.sn-stage [data-testid="now-playing-bar"] [data-encore-id="buttonTertiary"] svg {
+  inline-size: 18px !important;
+  block-size: 18px !important;
+}
+
+/* Transport: the one raised object. Shuffle and repeat sit flat at the two edges. */
+html.sn-stage [data-testid="general-controls"] > div:first-child > button:first-child { grid-area: shuf; justify-self: start; }
+html.sn-stage [data-testid="control-button-skip-back"] { grid-area: prev; }
+html.sn-stage [data-testid="control-button-playpause"] { grid-area: play; margin: 0 !important; }
+html.sn-stage [data-testid="control-button-skip-forward"] { grid-area: next; }
+html.sn-stage [data-testid="control-button-repeat"] { grid-area: rep; justify-self: end; }
+
+html.sn-stage [data-testid="now-playing-bar"] > div::before {
+  content: "";
+  grid-row: 3;
+  grid-column: 2 / 6;
+  justify-self: stretch;
+  align-self: stretch;
+  margin: calc(var(--sn-space-2) * -1) 0;
+  border-radius: var(--sn-r-pill);
+  background-color: var(--spice-main);
+  box-shadow: var(--sn-raised-2);
+}
+html.sn-stage [data-testid="control-button-skip-back"],
+html.sn-stage [data-testid="control-button-skip-forward"] {
+  color: var(--spice-text) !important;
+}
+html.sn-stage [data-testid="control-button-skip-back"] svg,
+html.sn-stage [data-testid="control-button-skip-forward"] svg {
+  inline-size: 20px !important;
+  block-size: 20px !important;
+}
+html.sn-stage [data-testid="player-controls"] [data-testid="control-button-playpause"],
+html.sn-stage [data-testid="player-controls"] [data-testid="control-button-playpause"] > span:first-child {
+  inline-size: 56px !important;
+  block-size: 56px !important;
+}
+
+/* Progress: a full-width row as tall as the waveform (no jump when it loads). Without the
+   waveform it is a thin line: 4px track, accent fill, thumb only on hover or keyboard focus.
+   The times sit close under its two ends. */
+html.sn-stage [data-testid="player-controls"] div:has(> [data-testid="playback-progressbar"]) {
+  grid-area: bar;
+  justify-self: stretch;
+  inline-size: 100%;
+  block-size: 40px;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+}
+html.sn-stage:not(.sn-waveform) [data-testid="player-controls"] div:has(> [data-testid="playback-progressbar"]) {
+  align-items: flex-end;
+  padding-block-end: var(--sn-space-2);
+}
+html.sn-stage [data-testid="playback-position"],
+html.sn-stage [data-testid="playback-duration"] {
+  min-inline-size: 0 !important;
+  margin-block-start: calc(var(--sn-space-4) * -1);
+  text-align: start !important;
+  font-size: 0.75rem !important;
+}
+html.sn-stage [data-testid="playback-position"] { grid-area: pos; justify-self: start; }
+html.sn-stage [data-testid="playback-duration"] { grid-area: dur; justify-self: end; }
+
+html.sn-stage [data-testid="now-playing-bar"] [data-testid="progress-bar"] {
+  --progress-bar-height: 4px;
+}
+html.sn-stage [data-testid="now-playing-bar"] [data-testid="progress-bar-handle"] {
+  opacity: 0;
+  transition: opacity var(--sn-ease);
+}
+html.sn-stage [data-testid="now-playing-bar"] [data-testid="progress-bar"]:hover [data-testid="progress-bar-handle"],
+html.sn-stage [data-testid="now-playing-bar"] :focus-within > [data-testid="progress-bar"] [data-testid="progress-bar-handle"] {
+  opacity: 1;
+}
+
+/* Volume: shares the last row with the panel tabs. Flat mute icon and a thin slider whose
+   fill is `subtext`: the accent stays on play and on playback progress. */
+html.sn-stage [data-testid="now-playing-bar"] [data-testid="volume-bar"] {
+  grid-area: vol;
+  justify-self: stretch;
+  display: flex !important;
+  gap: var(--sn-space-2) !important;
+  inline-size: auto !important;
+  max-inline-size: none !important;
+  margin: 0 !important;
+  padding-inline-start: var(--sn-space-3);
+}
+html.sn-stage [data-testid="now-playing-bar"] [data-testid="volume-bar"] > div {
+  flex: 1 1 auto;
+  inline-size: auto !important;
+  max-inline-size: none !important;
+}
+html.sn-stage [data-testid="now-playing-bar"] [data-testid="volume-bar"] [data-testid="progress-bar"] {
+  --fg-color: var(--spice-subtext);
+  --is-active-fg-color: var(--spice-text);
+}
+
+/* Mini player and full screen are not in the stage: listening mode is the big view. */
+html.sn-stage [data-testid="pip-toggle-button"],
+html.sn-stage [data-testid="fullscreen-mode-button"] {
+  display: none !important;
+}
+
+/* The queue repeats the current track at its top; the stage already shows it. */
+html.sn-stage #Desktop_PanelContainer_Id [role="tabpanel"] > div > div:first-child:has(> ul[role="treegrid"]) {
+  display: none !important;
+}
+
+/* ==== Panel tabs (html.sn-stage) ==== */
+/* Lyrics, queue and devices: three flat icons. The open one is the accent icon with Spotify's
+   dot under it. No group outline. */
+html.sn-stage [data-testid="lyrics-button"] { grid-area: lyr; justify-self: start; }
+html.sn-stage [data-testid="control-button-queue"] { grid-area: que; }
+html.sn-stage [data-testid="lyrics-button"] ~ span > button { grid-area: dev; justify-self: end; }
+
+/* ==== Left nav (html.sn-nav) ==== */
+/* Injected by theme.js at the top of the library slab: back / forward as raised circles, then
+   Home, Search and Liked Songs as flat rows. The current page is inset with an accent icon
+   and label. A hairline separates the nav from the library. */
+html.sn-nav #Desktop_LeftSidebar_Id > nav > div:not(.sn-nav) {
+  flex: 1 1 auto;
+  min-block-size: 0;
+}
+.sn-nav {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sn-space-2);
+  padding: var(--sn-space-5) var(--sn-space-4) var(--sn-space-3);
+  margin-inline: var(--sn-space-2);
+  border-block-end: var(--sn-divider);
+}
+.sn-nav-history {
+  display: flex;
+  gap: var(--sn-space-3);
+  padding-inline: var(--sn-space-1);
+  margin-block-end: var(--sn-space-2);
+}
+.sn-nav-history-btn {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: var(--spice-main);
+  color: var(--spice-subtext);
+  box-shadow: var(--sn-raised-1);
+  cursor: pointer;
+  transition: box-shadow var(--sn-ease), color var(--sn-ease);
+}
+.sn-nav-history-btn:hover { color: var(--spice-text); }
+.sn-nav-history-btn:active { box-shadow: var(--sn-inset-1); transition: none; }
+.sn-nav-history-btn:disabled {
+  box-shadow: none;
+  opacity: var(--sn-disabled-opacity);
+  cursor: default;
+}
+.sn-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sn-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sn-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sn-space-3);
+  inline-size: 100%;
+  padding: var(--sn-space-2) var(--sn-space-3);
+  border: 0;
+  border-radius: var(--sn-r-control);
+  background-color: transparent;
+  color: var(--spice-text);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--sn-ease), box-shadow var(--sn-ease), color var(--sn-ease);
+}
+.sn-nav-item:hover { background-color: var(--sn-hover-tint); }
+.sn-nav-item:active { box-shadow: var(--sn-inset-1); transition: none; }
+.sn-nav-item[aria-current="page"] {
+  background-color: transparent;
+  box-shadow: var(--sn-inset-1);
+  color: var(--spice-button-active);
+}
+.sn-nav-icon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 20px;
+  block-size: 20px;
+  color: var(--spice-subtext);
+}
+.sn-nav-icon svg,
+.sn-nav-icon svg path {
+  fill: currentColor !important;
+}
+.sn-nav-item:hover .sn-nav-icon { color: var(--spice-text); }
+.sn-nav-item[aria-current="page"] .sn-nav-icon { color: var(--spice-button-active); }
+.sn-nav-history-btn:focus-visible,
+.sn-nav-item:focus-visible {
+  outline: var(--sn-focus);
+  outline-offset: 3px;
+}
+/* Collapsed library (narrow rail): icons only, centred. */
+.sn-nav.sn-nav-rail { padding-inline: var(--sn-space-2); margin-inline: var(--sn-space-1); }
+.sn-nav.sn-nav-rail .sn-nav-history { flex-direction: column; align-items: center; }
+.sn-nav.sn-nav-rail .sn-nav-item { justify-content: center; padding-inline: 0; }
+.sn-nav.sn-nav-rail .sn-nav-label { display: none; }
+
+/* Pinned items form their own outlined group at the top of the library, with a gap before the
+   rest. A pinned row is one that shows the pin icon in its header-side slot. The outline is
+   drawn with inset hairlines (no layout shift): sides on every pinned row, top on the first,
+   bottom on the last. */
+html.sn-nav #Desktop_LeftSidebar_Id [role="row"]:has([class*="list-row__header-side"] svg) {
+  --sn-pin-line: rgba(var(--spice-rgb-neu-dark), 0.45);
+  border-radius: 0;
+  box-shadow: inset 1px 0 0 var(--sn-pin-line), inset -1px 0 0 var(--sn-pin-line);
+}
+html.sn-nav #Desktop_LeftSidebar_Id [role="row"]:has([class*="list-row__header-side"] svg):not([role="row"]:has([class*="list-row__header-side"] svg) + *) {
+  border-start-start-radius: var(--sn-r-control);
+  border-start-end-radius: var(--sn-r-control);
+  box-shadow: inset 1px 0 0 var(--sn-pin-line), inset -1px 0 0 var(--sn-pin-line), inset 0 1px 0 var(--sn-pin-line);
+}
+html.sn-nav #Desktop_LeftSidebar_Id [role="row"]:has([class*="list-row__header-side"] svg):not(:has(+ [role="row"] [class*="list-row__header-side"] svg)) {
+  border-end-start-radius: var(--sn-r-control);
+  border-end-end-radius: var(--sn-r-control);
+  box-shadow: inset 1px 0 0 var(--sn-pin-line), inset -1px 0 0 var(--sn-pin-line), inset 0 -1px 0 var(--sn-pin-line);
+}
+html.sn-nav #Desktop_LeftSidebar_Id [role="row"]:has([class*="list-row__header-side"] svg):not([role="row"]:has([class*="list-row__header-side"] svg) + *):not(:has(+ [role="row"] [class*="list-row__header-side"] svg)) {
+  border-radius: var(--sn-r-control);
+  box-shadow: inset 0 0 0 1px var(--sn-pin-line);
+}
+html.sn-nav #Desktop_LeftSidebar_Id [role="row"]:has([class*="list-row__header-side"] svg) + [role="row"]:not(:has([class*="list-row__header-side"] svg)) {
+  margin-block-start: var(--sn-space-3);
+}
+html.sn-nav #Desktop_LeftSidebar_Id [role="row"]:has([class*="list-row__header-side"] svg)[aria-selected="true"] {
+  box-shadow: var(--sn-inset-1);
+}
+html.sn-nav #Desktop_LeftSidebar_Id [class*="list-row__header-side"] svg {
+  color: var(--spice-button-active);
+}
+
+/* The top bar's back, forward and home buttons now live in the left nav. */
+html.sn-nav #global-nav-bar > div:first-of-type > div > div:has(> button + button),
+html.sn-nav #global-nav-bar div:has(> div > form[role="search"]) > button {
+  display: none !important;
+}
+
+/* ==== Declutter (html.sn-declutter) ==== */
+/* Things nobody asked for: notifications and friend activity buttons, upsells, ads, concert
+   and merch promos, the Jam invite in the queue, and the now playing view's filler (related
+   videos, about the artist, on tour). Podcasts and audiobooks stay. */
+html.sn-declutter #global-nav-bar div:has(> [data-testid="user-widget-link"]) > div > button[data-encore-id="buttonTertiary"],
+html.sn-declutter [data-testid="upsell-download-app-button"],
+html.sn-declutter [data-testid="home-ad-card"],
+html.sn-declutter [data-testid="home-dsa-message-banner"],
+html.sn-declutter [data-testid="embedded-ad-carousel"],
+html.sn-declutter [data-testid="concert-promo"],
+html.sn-declutter [data-testid="concert-recommendations"],
+html.sn-declutter [data-testid="on-tour-card"],
+html.sn-declutter [data-testid="artist-pick-merch-container"],
+html.sn-declutter #Desktop_PanelContainer_Id [role="tabpanel"] > div > div:has(> div > p[data-encore-id="text"] + [data-encore-id="buttonTertiary"]) {
+  display: none !important;
+}
+/* Now playing view: keep the lyrics preview and the credits (the only section element); hide
+   the other cards in that column. */
+html.sn-declutter #Desktop_PanelContainer_Id div:has(> section):has(> div + div + div + div) > :not(section, [data-testid="lyrics-npv-section"]) {
+  display: none !important;
+}
+
+/* ==== Rows v2 (html.sn-rows) ==== */
+/* Track rows: calmer metadata, a round raised play button in the index cell, and fewer columns
+   when the main column is narrow. List view already shows title over artist; compact view
+   stays one line: the user chose it. */
+html.sn-rows #main-view {
+  container: sn-main / inline-size;
+}
+/* Never change the row height: the list is virtualised and Spotify positions rows by its own
+   fixed height (56px list, 32px compact). Taller rows overlap what follows the list. */
+html.sn-rows .main-trackList-rowTitle {
+  font-weight: 500 !important;
+}
+html.sn-rows .main-trackList-trackListRow .main-trackList-rowSectionVariable,
+html.sn-rows .main-trackList-trackListRow .main-trackList-rowSectionVariable a {
+  color: var(--spice-subtext) !important;
+}
+/* The play button Spotify shows on hover in place of the number: a raised circle. It is wider
+   than the 16px index column and overflows it evenly into the column gap. */
+html.sn-rows #main-view .main-trackList-rowImagePlayButton {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 32px !important;
+  block-size: 32px !important;
+  margin: -8px !important; /* centred on Spotify's 16px marker it is pinned to (top/left 0) */
+  border-radius: 50% !important;
+  background-color: var(--spice-main) !important;
+  color: var(--spice-text) !important;
+  box-shadow: var(--sn-raised-1);
+}
+/* Compact rows are 32px tall: a slightly smaller circle keeps the row's edges free. */
+html.sn-rows #main-view .main-trackList-rowCompactMode .main-trackList-rowImagePlayButton {
+  inline-size: 28px !important;
+  block-size: 28px !important;
+  margin: -6px !important;
+}
+html.sn-rows #main-view .main-trackList-rowImagePlayButton:active {
+  box-shadow: var(--sn-inset-1);
+}
+html.sn-rows .main-trackList-rowImagePlayButton svg {
+  inline-size: 14px;
+  block-size: 14px;
+}
+/* Narrow main column: the second metadata column (date added on playlists) goes. */
+@container sn-main (max-width: 1300px) {
+  html.sn-rows .main-trackList-trackList[aria-colcount="5"] :is(.main-trackList-trackListRow, .main-trackList-trackListHeaderRow) {
+    grid-template-columns: [index] 16px [first] minmax(0, 4fr) [var1] minmax(0, 2fr) [last] minmax(120px, 1fr) !important;
+  }
+  html.sn-rows .main-trackList-trackList[aria-colcount="5"] :is(.main-trackList-trackListRow, .main-trackList-trackListHeaderRow) > [aria-colindex="4"] {
+    display: none !important;
+  }
+}
+
+/* Playing row: inset, accent title, and a thin accent line that fills with the playback
+   position (--sn-progress, written by theme.js on this row). */
+html.sn-rows #main-view .main-trackList-trackListRow.main-trackList-active {
+  position: relative;
+  background-color: transparent !important;
+  box-shadow: var(--sn-inset-1);
+}
+html.sn-rows .main-trackList-trackListRow.main-trackList-active .main-trackList-rowTitle {
+  color: var(--spice-button-active) !important;
+  font-weight: 600 !important;
+}
+html.sn-rows .main-trackList-trackListRow.main-trackList-active::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: var(--sn-space-4);
+  inset-block-end: 3px;
+  inline-size: calc((100% - var(--sn-space-8)) * var(--sn-progress, 0));
+  block-size: 2px;
+  border-radius: var(--sn-r-pill);
+  background-color: var(--spice-button-active);
+  pointer-events: none;
+  transition: inline-size 250ms linear;
+}
+
+/* Compact rows are only 32px, so the line would sit right under the text. Move the line to the
+   bottom edge and lift the content 2px with inner padding (border-box: the height stays 32px). */
+html.sn-rows #main-view .main-trackList-trackListRow.main-trackList-active.main-trackList-rowCompactMode {
+  box-sizing: border-box;
+  padding-block-end: 4px;
+}
+html.sn-rows .main-trackList-trackListRow.main-trackList-active.main-trackList-rowCompactMode::after {
+  inset-block-end: 1px;
+}
+
+/* ==== Headers v2 (html.sn-headers) ==== */
+/* Entity pages (playlist, album, artist, show): no giant banner pushing the tracks down. The
+   header takes its natural height: a raised art card next to a moderate title. Hero photos
+   (artists, editorial playlists) become a contained image card at the top, and the title sits
+   under it on the plain surface, so it never needs a scrim. */
+html.sn-headers .main-entityHeader-container {
+  block-size: auto !important;
+  min-block-size: 0 !important;
+  max-block-size: none !important;
+  padding-block: var(--sn-space-8) var(--sn-space-4) !important;
+}
+/* Artist headers keep an empty 232px spacer where other pages have their cover. */
+html.sn-headers .main-entityHeader-contentWrapper > div:empty {
+  display: none !important;
+}
+html.sn-headers .main-entityHeader-contentWrapper,
+html.sn-headers .main-entityHeader-contentWrapper > div:has(> .main-entityHeader-headerText) {
+  block-size: auto !important;
+  min-block-size: 0 !important;
+}
+html.sn-headers [data-testid="entity-header"] .main-entityHeader-imageContainer,
+html.sn-headers [data-testid="entity-header"] .main-entityHeader-imageContainerNew {
+  inline-size: var(--sn-header-art) !important;
+  block-size: var(--sn-header-art) !important;
+  min-inline-size: var(--sn-header-art) !important;
+}
+html.sn-headers [data-testid="entity-header"] h1,
+html.sn-headers [data-testid="entity-header"] h1 *,
+html.sn-headers [data-testid="entity-header"] .main-entityHeader-title,
+html.sn-headers [data-testid="entity-header"] .main-entityHeader-title * {
+  font-size: clamp(2rem, 3.4vw, 3.75rem) !important;
+  line-height: 1.05 !important;
+}
+
+/* Hero pages: the photo layer becomes a card with the slab's inner margins. */
+html.sn-headers .main-view-container div:has(> [data-testid="background-image"]) {
+  inset: var(--sn-space-5) var(--sn-space-5) auto !important;
+  block-size: var(--sn-hero-h) !important;
+  inline-size: auto !important;
+  border-radius: var(--sn-r-card);
+  overflow: hidden;
+  box-shadow: var(--sn-raised-2);
+}
+html.sn-headers .main-view-container [data-testid="background-image"] {
+  inset: 0 !important;
+  inline-size: 100% !important;
+  block-size: 100% !important;
+  transform: none !important;
+  background-position: center 30% !important;
+}
+html.sn-headers .main-view-container [data-testid="background-image"] + div:empty {
+  display: none !important; /* the fade only existed for text on the photo */
+}
+/* Spotify keeps the sticky bar's title and play button rendered at the top of hero pages,
+   hidden behind the full-size photo. The photo no longer covers it: hide the content until the
+   bar's background starts fading in on scroll. */
+html.sn-headers #main-view [data-testid="topbar"]:has(> .main-topBar-background[style*="opacity: 0;"]) [data-testid="topbar-content"] {
+  opacity: 0 !important;
+}
+html.sn-headers #main-view [data-testid="topbar"]:has(> .main-topBar-background[style*="opacity: 0;"]) [data-testid="topbar-content"] * {
+  pointer-events: none !important;
+}
+html.sn-headers .main-view-container:has([data-testid="background-image"]) .main-entityHeader-container {
+  padding-block-start: calc(var(--sn-hero-h) + var(--sn-space-8) + var(--sn-space-5)) !important;
+}
+
+/* ==== Cards v2 (html.sn-headers) ==== */
+/* Play buttons on cards are always there: a small raised circle of the material with a text
+   icon at rest. Hovering the card (or focusing the button) turns it into the accent fill. */
+html.sn-headers .main-card-PlayButtonContainer {
+  opacity: 1 !important;
+  transform: none !important;
+  inset-inline-end: var(--sn-space-2) !important;
+  inset-block-end: var(--sn-space-2) !important;
+}
+html.sn-headers .main-card-PlayButtonContainer [data-encore-id="buttonPrimary"] > span:first-child {
+  inline-size: 40px !important;
+  block-size: 40px !important;
+  min-inline-size: 40px !important;
+  background-color: var(--spice-main) !important;
+  color: var(--spice-text) !important;
+  opacity: 1 !important;
+}
+html.sn-headers .main-card-PlayButtonContainer [data-encore-id="buttonPrimary"] svg {
+  inline-size: 18px !important;
+  block-size: 18px !important;
+}
+html.sn-headers [data-encore-id="card"]:hover .main-card-PlayButtonContainer [data-encore-id="buttonPrimary"] > span:first-child,
+html.sn-headers .main-card-PlayButtonContainer [data-encore-id="buttonPrimary"]:focus-visible > span:first-child {
+  background-color: var(--spice-button-active) !important;
+  color: var(--spice-on-accent) !important;
+}
+
+/* ==== Home shortcuts v2 (html.sn-headers) ==== */
+/* "Jump back in" tiles: a little taller, the art inset in the tile (nested radius: control
+   radius minus the 8px padding), bolder names, and the play button always visible like on
+   cards. */
+html.sn-headers .view-homeShortcutsGrid-grid {
+  gap: var(--sn-space-4) !important;
+}
+html.sn-headers .view-homeShortcutsGrid-shortcut {
+  min-block-size: 72px;
+}
+html.sn-headers .view-homeShortcutsGrid-imageHolder {
+  padding: var(--sn-space-2);
+  inline-size: 72px !important;
+  block-size: 72px !important;
+}
+html.sn-headers .view-homeShortcutsGrid-imageHolder img,
+html.sn-headers .view-homeShortcutsGrid-imageWrapper,
+html.sn-headers .view-homeShortcutsGrid-imageContainer {
+  border-radius: calc(var(--sn-r-control) - var(--sn-space-2)) !important;
+  overflow: hidden;
+}
+html.sn-headers .view-homeShortcutsGrid-nameWrapper {
+  padding-inline-end: calc(36px + var(--sn-space-3)); /* room for the always-visible play button */
+}
+html.sn-headers .view-homeShortcutsGrid-name,
+html.sn-headers .view-homeShortcutsGrid-name * {
+  font-weight: 600 !important;
+}
+html.sn-headers .view-homeShortcutsGrid-PlayButtonContainer {
+  opacity: 1 !important;
+  transform: none !important;
+}
+html.sn-headers .view-homeShortcutsGrid-PlayButtonContainer [data-encore-id="buttonPrimary"] > span:first-child {
+  inline-size: 36px !important;
+  block-size: 36px !important;
+  min-inline-size: 36px !important;
+  background-color: var(--spice-main) !important;
+  color: var(--spice-text) !important;
+  opacity: 1 !important;
+}
+html.sn-headers .view-homeShortcutsGrid-PlayButtonContainer [data-encore-id="buttonPrimary"] svg {
+  inline-size: 16px !important;
+  block-size: 16px !important;
+}
+html.sn-headers .view-homeShortcutsGrid-shortcut:hover .view-homeShortcutsGrid-PlayButtonContainer [data-encore-id="buttonPrimary"] > span:first-child,
+html.sn-headers .view-homeShortcutsGrid-PlayButtonContainer [data-encore-id="buttonPrimary"]:focus-visible > span:first-child {
+  background-color: var(--spice-button-active) !important;
+  color: var(--spice-on-accent) !important;
+}
+/* Episode progress inside a tile: inset track, accent fill. */
+html.sn-headers .view-homeShortcutsGrid-episodeProgressBar {
+  border-radius: var(--sn-r-pill);
+  box-shadow: var(--sn-inset-1);
+}
+
+/* ==== Waveform (html.sn-waveform) ==== */
+/* Loudness bars (injected by theme.js) straight on the slab, no well. The played part is a second copy
+   of the bars in the accent, clipped at the playback position (--sn-progress). Spotify's
+   slider lies on top, transparent and as tall as the waveform, so clicking, dragging and the
+   arrow keys still seek. Its thumb only shows for keyboard focus. */
+html.sn-waveform [data-testid="player-controls"] div:has(> [data-testid="playback-progressbar"]) {
+  position: relative;
+}
+.sn-wave {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.sn-wave-base,
+.sn-wave-played {
+  position: absolute;
+  inset: var(--sn-space-1) 0;
+}
+.sn-wave svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+.sn-wave-base svg { fill: rgba(var(--spice-rgb-subtext), 0.3); }
+.sn-wave-played svg { fill: var(--spice-button-active); }
+.sn-wave-played {
+  clip-path: inset(0 calc((1 - var(--sn-progress, 0)) * 100%) 0 0);
+  transition: clip-path 250ms linear;
+}
+html.sn-waveform [data-testid="now-playing-bar"] [data-testid="playback-progressbar"],
+html.sn-waveform [data-testid="now-playing-bar"] [data-testid="playback-progressbar"] [data-testid="progress-bar"] {
+  position: relative;
+  z-index: 1;
+  block-size: 100% !important;
+}
+html.sn-waveform [data-testid="now-playing-bar"] [data-testid="playback-progressbar"] [data-testid="progress-bar"] {
+  --bg-color: transparent !important;
+  --fg-color: transparent !important;
+  --mg-color: transparent !important;
+  --is-active-fg-color: transparent !important;
+  --progress-bar-height: 100% !important;
+}
+html.sn-waveform [data-testid="now-playing-bar"] [data-testid="playback-progressbar"] [data-testid="progress-bar-background"] {
+  box-shadow: none !important;
+  background: transparent !important;
+}
+html.sn-waveform [data-testid="now-playing-bar"] [data-testid="playback-progressbar"] [data-testid="progress-bar-handle"] {
+  opacity: 0;
+}
+html.sn-waveform [data-testid="now-playing-bar"] [data-testid="playback-progressbar"]:focus-within [data-testid="progress-bar-handle"] {
+  opacity: 1;
+}
+
+/* ==== Listening mode (html.sn-listening) ==== */
+/* The button on the stage art: a raised circle of the material, always visible. */
+.sn-listen-btn {
+  position: absolute;
+  inset-block-start: var(--sn-space-4);
+  inset-inline-end: var(--sn-space-4);
+  display: inline-grid;
+  place-items: center;
+  inline-size: 36px;
+  block-size: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: var(--spice-main);
+  color: var(--spice-text);
+  box-shadow: var(--sn-raised-1);
+  cursor: pointer;
+  transition: box-shadow var(--sn-ease), color var(--sn-ease);
+}
+.sn-listen-btn:active { box-shadow: var(--sn-inset-1); transition: none; }
+.sn-listen-btn[aria-pressed="true"] { color: var(--spice-button-active); }
+.sn-listen-btn:focus-visible { outline: var(--sn-focus); outline-offset: 3px; }
+
+/* Only the player and the panel remain. Every area name stays in the template (Spotify's
+   overlays are placed by these lines); the library, top bar and main view get zero-size
+   tracks and are hidden. Gaps are 0 so the empty tracks add no space; slabs get margins. */
+html.sn-listening div:has(> #main-view) {
+  grid-template-areas:
+    "top-banner top-banner top-banner top-banner"
+    "left-sidebar global-nav now-playing-bar right-sidebar"
+    "left-sidebar main-view now-playing-bar right-sidebar" !important;
+  grid-template-rows: auto 0 minmax(0, 1fr) !important;
+  grid-template-columns: 0 0 minmax(0, 1fr) var(--sn-listen-panel-w) !important;
+  gap: 0 !important;
+}
+html.sn-listening #Desktop_LeftSidebar_Id,
+html.sn-listening #main-view,
+html.sn-listening #global-nav-bar,
+html.sn-listening div:has(> #main-view) > div:has(> #Desktop_LeftSidebar_Id) {
+  display: none !important;
+}
+/* Two slabs: the player (left, ::before) and the panel (right, ::after). */
+html.sn-listening div:has(> #main-view)::before {
+  grid-column: 3;
+  grid-row: 2 / 4;
+  margin-inline-end: var(--sn-gap-slab);
+}
+html.sn-listening div:has(> #main-view)::after {
+  content: "";
+  grid-column: 4;
+  grid-row: 2 / 4;
+  border-radius: var(--sn-r-slab);
+  background-color: var(--spice-main);
+  box-shadow: var(--sn-raised-3);
+  pointer-events: none;
+}
+html.sn-listening div:has(> [data-testid="now-playing-bar"]) {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  margin-inline-end: var(--sn-gap-slab) !important;
+  min-block-size: 0;
+  overflow: auto;
+  scrollbar-width: none; /* only scrolls on very short windows */
+}
+html.sn-listening [data-testid="now-playing-bar"] {
+  max-inline-size: 680px;
+  padding: var(--sn-space-8) !important;
+}
+html.sn-listening [data-testid="now-playing-bar"] > div {
+  row-gap: var(--sn-space-5);
+}
+html.sn-listening .sn-stage-art {
+  inline-size: min(100%, max(180px, calc(100vh - 560px)));
+  margin-block-end: var(--sn-space-2);
+}
+html.sn-listening [data-testid="now-playing-widget-v2"] [data-testid="context-item-link"],
+html.sn-listening [data-testid="now-playing-widget-v2"] [data-testid="context-item-link"] * {
+  font-size: 1.75rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em;
+}
+html.sn-listening [data-testid="now-playing-widget-v2-byline"],
+html.sn-listening [data-testid="now-playing-widget-v2-byline"] a {
+  font-size: 1.0625rem !important;
+}
+html.sn-listening [data-testid="player-controls"] div:has(> [data-testid="playback-progressbar"]) {
+  block-size: 64px;
+}
+/* Lyrics (Spotify's cinema overlay) take the panel column instead of the hidden columns. */
+html.sn-listening .Root > div > div:has([style*="--cinema-mode-bg-color-from"]) {
+  grid-area: right-sidebar !important;
+  margin: 0 !important;
 }
 
 /* ==== FRAGILE: hashed classes, recheck after Spotify updates ==== */
