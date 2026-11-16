@@ -41,6 +41,13 @@ colours. Nothing in `user.css` may hard-code a colour.
 6. **Meaning never relies on shadow alone.** Soft shadows are easy to miss,
    especially in dark schemes. Every state change also changes colour,
    weight or an accent marker.
+7. **One place for what is playing (v2).** The player and the right panel
+   are one column, the stage: large art, transport, progress, then the
+   queue. Track information never shows twice. Navigation lives at the top of
+   the library; the main column is for content.
+8. **Nothing that needs hover to exist.** Play buttons on cards and tiles
+   are always visible; hover only changes their fill. Upsells and filler are
+   removed rather than restyled.
 
 ## 2. The depth grammar
 
@@ -54,6 +61,20 @@ element first, then style it.
 | **Inset** | `--sn-inset-1` / `--sn-inset-2` | Inputs, slider and progress tracks, toggled-on buttons, the selected chip or row, the current nav item, the pressed state of any raised element | Pressed into the surface |
 | **Outlined** | `--sn-outline` (border) | A group of related controls that shares a context (filter chips, a segmented set, a settings group) | Flat area with a hairline edge, like the size picker in the reference |
 | **Flat** | none | Text, list rows, headings, metadata, dividers, icons inside other elements | No shadow, no border |
+
+v2 elements, classified with the same grammar:
+
+| Element | Treatment |
+|---|---|
+| Stage column (player + panel) | One slab (raised-3) |
+| Stage art | Image in a raised-2 frame (inner radius rule) |
+| Controls capsule | Raised-2 pill holding flat prev/next and the accent play button: the only raised object in the stage |
+| Stage icon buttons (shuffle, repeat, like, tabs, mute) | Flat icons; on = accent icon + Spotify's dot |
+| Left nav items | Flat rows; current = inset-1 + accent icon and label |
+| Pinned library items | Outlined group |
+| Waveform | Flat on the slab; bars `subtext` at 30 %, played bars accent |
+| Playing track row | Inset-1, accent title, 2px accent progress line |
+| Hero photo | Image card (raised-2) with the slab's margins |
 
 Rules:
 

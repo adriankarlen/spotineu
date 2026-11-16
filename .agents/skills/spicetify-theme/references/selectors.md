@@ -47,6 +47,35 @@ The `main-*` names from older themes are gone in 1.3.8. These hooks work:
 | Menus | `#context-menu [role="menu"]`, `[role="menuitem"]` |
 | Spicetify nav links | `.custom-navlinks-scrollable_container .spicetify-sc-scroller` (clips with overflow and `mask-image`) |
 
+### Layout grid and v2 (stage) hooks
+
+Verified live on Spicetify 2.46.4 for the v2 stage layout.
+
+| Area | Hook / finding |
+|---|---|
+| Root grid | `div:has(> #main-view)` (hashed class). Spotify declares `grid-template: "top-banner …" "global-nav …" "left-sidebar main-view right-sidebar" 1fr "now-playing-bar …" / auto 1fr` in CSS, not inline. The third column is implicit (sized by the right sidebar's own width). Overriding `grid-template-areas`, `-rows` and `-columns` with `!important` moves whole regions without moving DOM nodes. With an explicit column, Spotify's panel resizing no longer changes the column |
+| Grid children | `#global-nav-bar` (has its own `grid-area: top-banner/1/global-nav/-1` and `padding/margin: ±var(--panel-gap)`: reset both), `#Desktop_LeftSidebar_Id`, `div:has(> [data-testid="now-playing-bar"])` (player wrapper, `padding/margin: ±gap`), `#main-view`, `div:has(> div > div > #Desktop_PanelContainer_Id)` area `right-sidebar`. Four `pointer-events: none` overlay grids with line-based areas, and `#lyrics-cinema` |
+| Player bar parts | `[data-testid="now-playing-bar"] > div` holds three columns: left `div:has(> div > [data-testid="now-playing-widget-v2"])`, centre `div:has(> [data-testid="player-controls"])`, right `div:has(> div > [data-testid="lyrics-button"])` |
+| Player buttons | `control-button-skip-back`, `control-button-playpause`, `control-button-skip-forward`, `control-button-repeat`, `lyrics-button`, `control-button-queue`, devices = `[data-testid="lyrics-button"] ~ span > button` (no testid), `volume-bar`, `pip-toggle-button`, `fullscreen-mode-button`. Shuffle has no testid: first button in `[data-testid="general-controls"] > div:first-child`. Like/add: `[data-testid="now-playing-widget-v2"] button` |
+| Open panel state | No panel API on `Spicetify.Platform`. `aria-pressed="true"` on `control-button-queue` or the devices button shows which panel is open. `#Desktop_PanelContainer_Id[aria-label]` names it (localised, do not select on it). Closing the queue falls back to the now playing view. Open a panel by clicking its button |
+| Lyrics | `lyrics-button` opens the **cinema** overlay (`[style*="--cinema-mode-bg-color-from"]`) over the left and main columns, not a route. `aria-pressed` on the button. With the stage grid it covers library + main and leaves the stage column visible |
+| Playing row | `.main-trackList-active` on the visible row (`.main-trackList-trackListRow`, mapped class). Cells: `.main-trackList-rowSectionIndex` (ci 1), `.main-trackList-rowSectionStart` (title, ci 2), `.main-trackList-rowSectionVariable` (artist, album, date: ci 3–5), `.main-trackList-rowSectionEnd`. Compact mode: `.main-trackList-rowMainContentCompact` (artist in its own column); list mode has title over artist already |
+| Cover URLs | `Spicetify.Player.data.item.images[]` with labels `small`, `standard`, `large`, `xlarge`; values are `spotify:image:<id>` → `https://i.scdn.co/image/<id>` |
+| Audio analysis | `Spicetify.getAudioData(uri?)` still works (internal spclient endpoint): `segments[]` with `start`, `duration`, `loudness_max` (dB), plus `track.duration` |
+| Injected nodes | A node appended to `[data-testid="now-playing-bar"]` or prepended to `#Desktop_LeftSidebar_Id > nav` survives route changes and track changes |
+| Right panel width | `.Root__right-sidebar-peek` (mapped) and its inner `div:has(#Desktop_PanelContainer_Id)` keep their own resizable width (420px) and paint a background; the resize bar is `.LayoutResizer__resize-bar` next to the peek |
+| Queue "now playing" | `#Desktop_PanelContainer_Id [role="tabpanel"] > div > div:first-child:has(> ul[role="treegrid"])`; Jam invite: `[role="tabpanel"] > div > div:has(> div > p[data-encore-id="text"] + [data-encore-id="buttonTertiary"])` |
+| Now playing view cards | siblings in `div:has(> section):has(> div + div + div + div)`: lyrics preview `[data-testid="lyrics-npv-section"]`, related videos, about the artist, credits (the only `section`), on tour |
+| Top bar groups | `#global-nav-bar > div:first-of-type > div > div:has(> button + button)` = back/forward; `div:has(> div > form[role="search"]) > button` = home; `div:has(> [data-testid="user-widget-link"]) > div > button[data-encore-id="buttonTertiary"]` = What's new + friend activity (Studio sits in a `span`). Search collapses via the `searchInputCollapsed` class (width 48px, last child hidden) when space is short; the centre block is `position: absolute` |
+| Library pinned rows | `#Desktop_LeftSidebar_Id [role="row"]:has([class*="list-row__header-side"] svg)`; rows are static siblings |
+| Track list grid | rows use `--grid-template-columns` with named lines `[index] [first] [var1] [var2] [last]`; only `.main-trackList-rowSectionEnd` is placed (`grid-column: last`). Equaliser: `img.main-trackList-playingIcon`, `src` is `/images/equaliser-animated-green.gif` while playing with the window focused (and no reduced motion), else `/images/equaliser-green.svg`. Rows are virtualised with a fixed height (56px list, 32px compact): never change it. The hover play button is `position: absolute; top: 0; left: 0` in the 16px `.main-trackList-rowMarker` |
+| Entity header heights | `.main-entityHeader-container` (fixed height on hero pages), `.main-entityHeader-contentWrapper > div:has(> .main-entityHeader-headerText)` (hashed `height: clamp(128px, …, 232px)`), artist pages add an empty `.main-entityHeader-contentWrapper > div:empty` spacer; artist titles are a `span` in `.main-entityHeader-title`, not `h1` |
+| Hero photo | `div:has(> [data-testid="background-image"])` (absolute, parallax transform on the image); `[data-testid="overscroll-background"]` is an artwork-coloured wash behind it; the sticky bar's content is always rendered and only hidden behind the photo: its background is `[data-testid="topbar"] > .main-topBar-background` with inline `opacity` |
+| Action bar wash | `#main-view div:has(> div > div > [data-testid="action-bar"]) > div:empty` (gradient, artist pages) |
+| Card / shortcut play | `.main-card-PlayButtonContainer` (opacity 0 + translateY until hover); shortcuts: mapped `.view-homeShortcutsGrid-*` (`-grid`, `-shortcut`, `-imageHolder`, `-nameWrapper`, `-PlayButtonContainer`, `-episodeProgressBar`) |
+| Hidden dialogs | Spotify keeps `[role="dialog"]` nodes in the DOM with `visibility: hidden`; test with `checkVisibility()` |
+| Free shortcut | `mod+shift+f` is not used by Spotify (taken: `mod+f`, `mod+alt+f`, `shift+mod+alt+f`, `mod+shift+l/n/z`). spotineu uses it for listening mode |
+
 Inline custom properties are a recurring pattern in 1.3.8: Spotify passes
 artwork colours to components as inline `--…-color-*` variables. Select the
 element with `[style*="--name"]` and override the variables with

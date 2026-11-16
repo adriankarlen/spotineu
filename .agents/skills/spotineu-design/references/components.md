@@ -9,48 +9,70 @@ If you style an area that is not here, decide it with the steps in SKILL.md
 section 8 and add a section to this file, so the next agent makes the same
 choice.
 
-## Layout: floating slabs
+## Layout: the stage (v2)
 
 ```
-┌──────────────────────────────────────────────┐  surface (window background)
-│   ‹ ›  ⌂  ( search…………… )            ◉    │  top bar: no slab, raised controls
-│  ╭──────╮  ╭────────────────────╮  ╭──────╮  │
-│  │ lib  │  │ main view          │  │ right│  │  three slabs, raised-3
-│  │      │  │                    │  │ panel│  │
-│  ╰──────╯  ╰────────────────────╯  ╰──────╯  │
-│  ╭──────────────────────────────────────────╮ │
-│  │ player bar                               │ │  slab, raised-3
-│  ╰──────────────────────────────────────────╯ │
-└──────────────────────────────────────────────┘
+┌──────────┬───────────────────────────────┬──────────────┐  surface
+│ ‹ ›      │ ( search…………… )         ◉    │ ╭──────────╮ │
+│ ⌂ Home   │╭─────────────────────────────╮│ │   ART    │ │  stage column:
+│ ⌕ Search ││ main view (slab)            ││ ╰──────────╯ │  ONE slab for
+│ ♥ Liked  ││                             ││ Title      ♡ │  player + panel
+│──────────││                             ││ ⤮ ╭⏮ ⏯ ⏭╮ ↻ │
+│ 📌 pinned ││                             ││ ▁▃▅▇▅▃▁▂▃▅▃  │  waveform
+│──────────││                             ││ 🔊 ────────  │
+│ playlist ││                             ││ ▢ (≡ ♪ ⌁) ⛶ │  panel tabs
+│ …        ││                             ││ queue …      │
+└──────────┴╰─────────────────────────────╯┴──────────────┘
+  library slab      main view slab            stage slab
 ```
 
+- Three columns, three slabs (raised-3, `--sn-r-slab`): the library (with the
+  left nav at its top), the main view, and the **stage** (player + right
+  panel in one slab). There is no bottom bar and no full-width top bar.
+- The old top bar is the head of the main column: it sits on the surface
+  above the main view slab, not in a slab.
+- The stage column has a fixed width (`--sn-stage-w`); the panel's resize
+  handle is hidden.
+- Below 1100px window width the stage is dropped and the v1 layout returns
+  (three slabs + bottom player bar). Every v2 area falls back to v1 when its
+  feature is off or its Spotify nodes are missing (see theme-js.md).
 - The window background, the gaps and the panels are all `--spice-main`.
-- Each panel (library, main view, right panel, player bar) is a slab:
-  raised-3, radius `--sn-r-slab`.
-- Gaps between slabs and the window edge: `--sn-gap-slab` (20px). Spotify's
-  default gap (8px) is too small for pronounced shadows.
+  Gaps: `--sn-gap-slab` (20px). Scroll areas inside a slab need inner
+  padding (≥ 16px) so the shadows of raised cards are not clipped.
 - Remove Spotify's panel background colours, borders and gradients.
-- Scroll areas inside a slab need inner padding (≥ 16px) so the shadows of
-  raised cards inside them are not clipped. Keep the scroll container
-  clipped to the slab radius.
-- Resize handles between panels: invisible at rest, a 3px accent bar on
-  hover.
 
-## Top bar
+v1 layout (the fallback): library, main view and right panel as three slabs
+over a full-width bottom player slab, with the top bar on the surface above.
 
-`data-testid="topbar"`, `topbar-content`.
+## Top bar (main column head)
 
-- No slab. The top bar sits on the main view slab's top area, or on the
-  surface above the slabs, depending on Spotify's layout. Its controls carry
-  the depth.
-- Back/forward and other icon buttons: raised-1 circles, 36px.
-- Home button: raised-1 circle; inset with an accent icon when on the home
-  route. Spotify only marks this with a hashed class, so `theme.js` sets
-  `html.sn-route-home` and the CSS keys off that.
-- Search field: inset-1 pill, 44px tall, placeholder in `subtext`, the search
-  icon flat in `subtext`. Focus: accent focus ring, the field stays inset.
-- Profile avatar: image inside a raised-1 circular frame with 3px padding.
-- Window controls (macOS traffic lights) are left alone.
+`#global-nav-bar`; `data-testid="topbar"`, `topbar-content` are the sticky
+bar inside the main view.
+
+- No slab. In the stage layout the bar is the head of the main column: a wide
+  search pill on the left (max 560px, never collapsed to an icon), account
+  buttons on the right. Back, forward and Home move to the left nav (when
+  `nav` is on).
+- Icon buttons: raised-1 circles, 36px.
+- Search field: inset-1 pill, placeholder in `subtext`, the search icon flat
+  in `subtext`. Focus: accent focus ring, the field stays inset.
+- Profile avatar: image inside a raised-1 circular frame.
+- What's new and friend activity are hidden by `declutter`.
+- v1 fallback: Home is a raised-1 circle, inset with an accent icon on the
+  home route (`html.sn-route-home`).
+
+## Left nav (v2)
+
+Injected by theme.js at the top of the library slab.
+
+- Back / forward: raised-1 circles, 32px; disabled = flat at 45 %.
+- Home, Search, Liked Songs: flat rows (icon + label, weight 600). The
+  current page is inset-1 with accent icon and label (`aria-current`).
+- A hairline (`--sn-divider`) separates the nav from the library.
+- Collapsed library (narrow rail): icons only, centred.
+- Pinned library items form one outlined group (hairline outline drawn with
+  inset shadows, radius `--sn-r-control`) with a 12px gap before the rest;
+  the pin icon is accent.
 
 ## Library (left panel)
 
@@ -79,11 +101,16 @@ choice.
 - Entity header (playlist, album, artist): the cover art sits in a raised-2
   frame (padding 10px, radius `--sn-r-card`, image radius 10px). Title and
   metadata flat to its right.
-- Hero images (editorial playlists, artists): the photo stays, at the top of
-  the slab (clipped by its radius). Spotify's dark scrim is replaced by a
-  matte fade into the surface at the bottom, so the title in the scheme's
-  `text` colour reads on any photo in light and dark schemes. Never make
-  the layers above the photo opaque.
+- Compact headers (v2, `headers`): the header takes its natural height; the
+  cover is 176px in its raised-2 frame; the title is clamp(2rem, 3.4vw,
+  3.75rem). Hero photos (artists, editorial playlists) become a contained
+  image card (raised-2, `--sn-r-card`, height `--sn-hero-h`) with the
+  slab's 20px margins, and the title sits under it on the plain surface: no
+  scrim needed. The sticky bar's content stays hidden until its background
+  fades in.
+- Hero images (v1 fallback): the photo stays at the top of the slab; a matte
+  fade into the surface replaces Spotify's scrim. Never make the layers above
+  the photo opaque.
 - Action bar (`data-testid="action-bar"`): the big play button is raised-2,
   56px, accent fill, `on-accent` icon. Shuffle, like/save, download and more
   are raised-1 circles, 40px, following the toggle rules.
@@ -97,75 +124,135 @@ choice.
   `text`, subtitle `subtext`.
 - Hover: the card stays raised; title goes to `text` if it was not, and
   Spotify's hover play button appears.
-- Hover play button on a card: raised-1 circle, accent fill, `on-accent`
-  icon, positioned inside the artwork's lower right corner with a gap of 8px.
+- Play button on a card (v2): always visible, a 40px raised-1 circle of the
+  material with a `text` icon in the artwork's lower right corner (8px
+  gap). Hovering the card (or keyboard focus) turns it into the accent fill.
+  v1: Spotify's hover-only accent button.
 - Grid gap: at least 20px both ways (shadow room).
 - Cards in one shelf have equal height (fill their cell), so the raised
   tiles line up whatever the title length.
 - Home "shortcut" tiles (the compact grid at the top of home): raised-1
-  tiles, radius `--sn-r-control`, art flush left with the tile's inner
-  radius.
+  tiles, radius `--sn-r-control`, 16px gap. v2: the art is inset 8px in the
+  tile (radius = control radius − 8px), names weight 600, and a 36px play
+  button is always visible (accent on hover), with room reserved for it.
 - Chips row on home (All / Music / Podcasts): raised-1 pills; selected inset
   with accent text.
 
 ## Track list
 
-`[role="grid"]`, `[role="row"]`.
+`[role="grid"]`, `[role="row"]`; mapped classes `.main-trackList-*`.
 
 - Lives directly on the main view slab. No card around the whole list.
-- Header row: flat, `subtext`, weight 500, sentence case, a 1px divider in
-  `rgba(var(--spice-rgb-neu-dark), .45)` below it. The sticky header gets
-  the surface as background, no shadow.
+- Header row: flat, `subtext`, weight 500, sentence case, a 1px divider
+  below. The sticky header gets the surface as background, no shadow.
 - Rows: flat, radius `--sn-r-control`. Hover = tint. Selected = inset-1.
-  Playing = title in accent, weight 600; the equaliser icon in accent.
+- Two lines (title over artist) in Spotify's list view, one line in compact
+  view. Never change the row height: the list is virtualised and Spotify
+  positions rows by its own fixed height (56px list, 32px compact); taller
+  rows overlap the "recommended" section below. Title weight 500; metadata
+  columns in `subtext`.
+- Fewer columns: when the main column is narrower than 1300px the second
+  metadata column (date added) is hidden.
+- The play button in the index cell (shown on hover): raised-1 circle, 32px
+  (28px in compact view), centred on Spotify's 16px marker.
+- Playing row: inset-1, title in accent weight 600, the equaliser in accent
+  (Spotify's green image, the static SVG or the animated GIF it shows while
+  the window has focus, is recoloured with itself as a mask, so it keeps
+  animating), and a 2px accent line (in compact view it sits on the bottom
+  edge and the row content is lifted 2px with inner padding) at
+  the bottom of the row that fills with the playback position.
 - Row artwork: radius 6px, no shadow.
-- Row actions (like, more): flat icons, shown on hover as Spotify does; the
-  liked heart is accent.
-- Index numbers and durations: `subtext`, tabular figures
-  (`font-variant-numeric: tabular-nums`).
+- Index numbers and durations: `subtext`, tabular figures.
 
-## Player bar
+## Stage player (v2)
 
-`data-testid="now-playing-bar"`, `now-playing-widget`, `player-controls`,
-`playback-progressbar`, `progress-bar`, `volume-bar`.
+`data-testid="now-playing-bar"`, `now-playing-widget-v2`, `player-controls`,
+`general-controls`, `playback-progressbar`, `volume-bar`.
+
+Calm by design: **one raised object** (the transport capsule); everything
+else is flat icons and thin lines on the slab. The player bar becomes a grid
+of six equal columns at the top of the stage slab:
+
+```
+art   art   art   art   art   art     large cover, raised-2 frame, listening button
+meta  meta  meta  meta  meta  like    title 1.25rem/700, artist subtext; like flat
+shuf  prev  play  play  next  rep     capsule: raised-2 pill around prev/play/next
+bar   bar   bar   bar   bar   bar     waveform, or a thin progress line (40px row)
+pos   pos   pos   dur   dur   dur     times 0.75rem subtext, close under the bar
+lyr   que   dev   vol   vol   vol     panel tabs, then volume
+```
+
+- Art: the large cover (injected), in a raised-2 frame (padding 8px, image
+  radius = card radius − 8px). It shrinks with the window height.
+- Every icon button in the stage is flat: no circle, `subtext` icon, `text`
+  on hover, accent when on. Spotify's small dot under shuffle, repeat and the
+  open tab stays as the non-colour signal. Pressing shows inset-1 briefly.
+- Capsule: prev and next as `text` icons, play as the one accent fill (56px).
+  Shuffle and repeat sit flat at the two edges of the row.
+- Progress without the waveform: 4px track, accent fill, thumb only on hover
+  or keyboard focus, aligned to the bottom of its 40px row so it stays with
+  the times (the row keeps its height, so nothing jumps when the waveform
+  loads).
+- Volume: flat mute icon and a thin slider with a `subtext` fill; the accent
+  stays on play and playback progress.
+- Hidden in the stage: the audio quality badge, the mini player and full
+  screen buttons (listening mode is the big view).
+- The queue does not repeat the current track (the stage shows it).
+
+## Player bar (v1 fallback, narrow windows)
 
 - The bar is a slab, separated from the panels above by `--sn-gap-slab`.
 - Now playing (left): cover art in a raised-1 frame (padding 4px, radius
-  `--sn-r-control`). Title weight 600 `text`, artist `subtext`. The like
-  button follows the toggle rules.
-- Transport controls: previous/next raised-1 circles 40px; play/pause
-  raised-2 circle 52px with accent fill. Shuffle/repeat follow the toggle
-  rules (on = inset + accent; repeat-one adds Spotify's small "1" marker in
-  accent).
-- Progress bar: inset-1 pill track, 8px tall; accent fill; thumb is a raised-1
-  circle (16px, surface colour), always visible. Elapsed and remaining times
-  in `subtext`, tabular figures.
-- Volume: the same slider recipe, shorter. The mute button is a raised-1
-  circle.
-- Extra controls (lyrics, queue, devices, mini player, full screen): raised-1
-  circles 36px; on (panel open) = inset + accent icon.
-- Connect bar ("Listening on…"): a flat strip inside the player slab, text in
-  accent. No green background.
+  `--sn-r-control`). Title weight 600 `text`, artist `subtext`.
+- Transport: previous/next raised-1 circles 40px; play/pause raised-2 circle
+  52px with accent fill. Shuffle/repeat follow the toggle rules.
+- Progress bar: inset-1 pill track, 8px tall; accent fill; thumb a raised-1
+  circle (16px, surface colour), always visible. Times in `subtext`.
+- Volume: the same slider recipe, shorter. Mute: raised-1 circle.
+- Extra controls: raised-1 circles 36px; on (panel open) = inset + accent.
 
-## Right panel (now playing view, queue, lyrics, friend activity)
+## Waveform (v2)
 
-- The panel is a slab.
+- Loudness bars (from Spotify's audio analysis) straight on the slab, no
+  well, 40px tall (64px in listening mode).
+- Bars in `subtext` at 30 %; the played part is a second copy in the
+  accent, clipped at the playback position. No thumb at rest; Spotify's
+  slider lies on top, transparent, so click, drag and arrow keys still seek,
+  and its raised thumb shows for keyboard focus.
+- When there is no analysis for a track, the plain v1 slider shows.
+
+## Listening mode (v2)
+
+Opened from the raised-1 button on the stage art or ⌘/Ctrl+Shift+F; Esc or
+the button closes it.
+
+- Only two slabs: the player (left, centred, max 680px, art up to the window
+  height minus the controls; title 1.75rem/800) and the panel (right,
+  `--sn-listen-panel-w`): queue, devices or lyrics.
+- Lyrics (Spotify's cinema overlay) take the panel column.
+- Library, top bar and main view are hidden.
+
+## Right panel (queue, devices, lyrics, now playing view)
+
+- In the stage layout the panel is the lower part of the stage slab (no
+  slab of its own). The queue is always open unless the user picks devices
+  (or another panel); Spotify's now playing view is replaced by the stage.
 - Header: title flat; close/more buttons raised-1 circles.
-- Now playing view: large cover art or Canvas video in a raised-2 frame
-  (radius `--sn-r-card`) inside the art slot. Spotify bleeds the Canvas
-  over the whole top of the panel with dark gradient overlays; the frame
-  replaces that and the overlays are removed. Track info flat.
-  Info cards ("About the artist", "Credits", "Next in queue"): raised-2
-  cards on the slab. Images inside them follow the image rule.
-- Queue: same rules as the track list. The "Now playing" row is inset-1.
-- Lyrics preview card: raised-2 card, heading `subtext`, lines `text`.
-- Lyrics (full view, which opens in "cinema mode" over the panels): the
-  overlay is a slab (raised-3, radius `--sn-r-slab`), not a black-framed
-  coloured sheet. Past lines `subtext`, current line `text`, upcoming
-  lines `subtext` at 70 %. Header title in `text`, no scrim. Header icon
-  buttons stay flat for now.
-- Panel icon buttons (close, more, copy link, like) outside rows: raised-1
-  circles, following the toggle rules.
+- Queue: same rules as the track list.
+- Lyrics (cinema mode, over the library and main view): the overlay is a
+  slab (raised-3, radius `--sn-r-slab`). Past lines `subtext`, current line
+  `text`, upcoming lines `subtext` at 70 %. Header title in `text`, no scrim.
+- Now playing view (v1 fallback): cover art or Canvas in a raised-2 frame;
+  info cards raised-2. With `declutter` only the lyrics preview and credits
+  remain (related videos, about the artist and on tour are hidden).
+- Panel icon buttons outside rows: raised-1 circles, toggle rules.
+
+## Declutter (v2)
+
+Hidden when `declutter` is on: What's new and friend activity buttons,
+"install app" upsell, home ads and DSA banners, concert and merch promos,
+the Jam invite in the queue, and the now playing view's filler. Podcasts and
+audiobooks stay.
 
 ## Menus, tooltips and dialogs
 
