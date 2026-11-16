@@ -520,6 +520,8 @@ section[data-testid="component-shelf"] > div::after {
 
 /* ==== Entity pages (playlist, album, artist, show, liked songs) ==== */
 /* Spotify paints colour-extracted washes on empty layer divs: header, action bar, sticky top bar. */
+[data-testid="overscroll-background"],
+#main-view div:has(> div > div > [data-testid="action-bar"]) > div:empty,
 [data-testid="entity-header"] > div:empty,
 #main-view [data-testid$="-page"] > div:empty,
 #main-view [data-testid$="-page"] > div > div:empty[style*="--background-base"] {
@@ -661,6 +663,22 @@ section[data-testid="component-shelf"] > div::after {
 #main-view [role="grid"] [role="gridcell"] {
   font-variant-numeric: tabular-nums;
 }
+/* Playing indicator: Spotify's equaliser is a green image: a static SVG, or an animated GIF
+   while the window has focus. Hide its pixels and paint the accent through the same image used
+   as a mask, so the animation keeps running. */
+img.main-trackList-playingIcon,
+img[src*="equaliser-green"],
+img[src*="equaliser-animated-green"] {
+  object-position: -9999px 0;
+  background-color: var(--spice-button-active);
+  -webkit-mask: url("/images/equaliser-green.svg") center / contain no-repeat;
+  mask: url("/images/equaliser-green.svg") center / contain no-repeat;
+}
+img[src*="equaliser-animated-green"] {
+  -webkit-mask-image: url("/images/equaliser-animated-green.gif");
+  mask-image: url("/images/equaliser-animated-green.gif");
+}
+
 /* Column header row: sentence case, subtext, one hairline below. */
 #main-view [role="grid"] [role="row"][aria-rowindex="1"] [role="columnheader"] {
   color: var(--spice-subtext) !important;
